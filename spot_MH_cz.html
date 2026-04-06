@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Elektřina">
+<meta name="theme-color" content="#0a0e17">
+<link rel="manifest" href="manifest.json">
+<title>Spotová Elektřina & FVE</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap');
+
+  :root {
+    --bg: #0a0e17;
+    --surface: #111827;
+    --surface2: #1a2235;
+    --border: #1e2d45;
+    --accent: #00d4ff;
+    --green: #00e676;
+    --yellow: #ffd600;
+    --red: #ff1744;
+    --orange: #ff6b35;
+    --purple: #b388ff;
+    --text: #e8f0fe;
+    --muted: #5c7a99;
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: 'Syne', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100dvh;
+    overflow-x: hidden;
+    padding-top: var(--safe-top);
+    padding-bottom: var(--safe-bottom);
+  }
+
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(rgba(0,212,255,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,212,255,0.025) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none; z-index: 0;
+  }
+
+  .container { max-width: 1100px; margin: 0 auto; padding: 18px 16px; position: relative; z-index: 1; }
+
+  /* ── HEADER ── */
+  header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 20px; padding-bottom: 16px;
+    border-bottom: 1px solid var(--border); gap: 10px;
+  }
+  .logo { display: flex; align-items: center; gap: 10px; }
+  .logo-icon {
+    width: 38px; height: 38px;
+    background: linear-gradient(135deg, var(--accent), #0066ff);
+    border-radius: 10px; display: flex; align-items: center; justify-content: center;
+    font-size: 20px; flex-shrink: 0;
+  }
+  .logo h1 { font-size: 1.1rem; font-weight: 800; letter-spacing: -0.5px; }
+  .logo span { color: var(--accent); }
+  .logo-sub { font-size: 0.62rem; color: var(--muted); margin-top: 1px; font-family: 'Space Mono', monospace; }
+
+  .header-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  .refresh-btn {
+    background: var(--surface2); border: 1px solid var(--border); color: var(--accent);
+    padding: 8px 13px; border-radius: 10px; cursor: pointer;
+    font-family: 'Syne', sans-serif; font-size: 0.8rem; font-weight: 600;
+    display: flex; align-items: center; gap: 5px; min-height: 42px; transition: all 0.2s;
+  }
+  .refresh-btn:hover { background: var(--border); }
+  .refresh-btn.loading { opacity: 0.6; pointer-events: none; }
+
+  /* ── TABS ── */
+  .main-tabs {
+    display: flex; gap: 4px; background: var(--surface);
+    border-radius: 12px; padding: 4px; margin-bottom: 20px;
+    border: 1px solid var(--border);
+  }
+  .main-tab {
+    flex: 1; padding: 9px 8px; border-radius: 9px; border: none;
+    background: transparent; color: var(--muted);
+    font-family: 'Syne', sans-serif; font-size: 0.82rem; font-weight: 700;
+    cursor: pointer; transition: all 0.15s; min-height: 40px;
+  }
+  .main-tab.active { background: var(--surface2); color: var(--text); }
+
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* ── CARDS ── */
+  .cards-row {
+    display: grid; gap: 12px; margin-bottom: 18px;
+  }
+  .cols-3 { grid-template-columns: 1.4fr 1fr 1fr; }
+  .cols-2 { grid-template-columns: 1fr 1fr; }
+  .cols-4 { grid-template-columns: repeat(4, 1fr); }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; padding: 16px 18px;
+    position: relative; overflow: hidden;
+  }
+  .card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: var(--card-color, var(--accent)); border-radius: 16px 16px 0 0;
+  }
+  .card.c-blue  { --card-color: var(--accent); }
+  .card.c-green { --card-color: var(--green); }
+  .card.c-red   { --card-color: var(--red); }
+  .card.c-yellow{ --card-color: var(--yellow); }
+  .card.c-orange{ --card-color: var(--orange); }
+  .card.c-purple{ --card-color: var(--purple); }
+
+  .card-label {
+    font-size: 0.62rem; font-weight: 600; letter-spacing: 1.5px;
+    text-transform: uppercase; color: var(--muted); margin-bottom: 6px;
+  }
+  .card-value {
+    font-family: 'Space Mono', monospace; font-size: 1.85rem;
+    font-weight: 700; line-height: 1; margin-bottom: 3px;
+  }
+  .card-value.big { font-size: 2.2rem; }
+  .card-sub { font-size: 0.68rem; color: var(--muted); font-family: 'Space Mono', monospace; }
+  .card-sub2 { font-size: 0.68rem; color: var(--muted); font-family: 'Space Mono', monospace; margin-top: 4px; }
+
+  /* battery bar */
+  .bat-bar-wrap { margin-top: 8px; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+  .bat-bar { height: 100%; border-radius: 3px; transition: width 0.5s ease; }
+
+  /* flow arrows */
+  .flow-grid {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; padding: 20px; margin-bottom: 18px;
+  }
+  .flow-title {
+    font-size: 0.62rem; font-weight: 600; letter-spacing: 2px;
+    text-transform: uppercase; color: var(--muted); margin-bottom: 16px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .flow-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  .flow-diagram {
+    display: grid;
+    grid-template-columns: 1fr 80px 1fr;
+    grid-template-rows: auto 60px auto;
+    gap: 4px;
+    align-items: center;
+    justify-items: center;
+    max-width: 500px; margin: 0 auto;
+  }
+
+  .flow-node {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 10px 14px; text-align: center; min-width: 90px;
+  }
+  .flow-node .fn-icon { font-size: 1.4rem; margin-bottom: 4px; }
+  .flow-node .fn-label { font-size: 0.6rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+  .flow-node .fn-value { font-family: 'Space Mono', monospace; font-size: 0.9rem; font-weight: 700; margin-top: 2px; }
+
+  .flow-arrow {
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem; color: var(--muted); position: relative;
+  }
+  .flow-arrow.active { color: var(--accent); }
+  .flow-arrow.active-green { color: var(--green); }
+  .flow-arrow.active-yellow { color: var(--yellow); }
+  .flow-arrow.active-red { color: var(--red); }
+
+  /* Section title */
+  .section-title {
+    font-size: 0.62rem; font-weight: 600; letter-spacing: 2px;
+    text-transform: uppercase; color: var(--muted); margin-bottom: 10px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  /* Next slots */
+  .next-slots { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
+  .slot-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 12px 8px; text-align: center;
+  }
+  .slot-time { font-family: 'Space Mono', monospace; font-size: 0.68rem; color: var(--muted); margin-bottom: 5px; }
+  .slot-price { font-family: 'Space Mono', monospace; font-size: 1.1rem; font-weight: 700; margin-bottom: 2px; }
+  .slot-eur { font-size: 0.6rem; color: var(--muted); font-family: 'Space Mono', monospace; }
+
+  /* Chart */
+  .chart-section {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; padding: 16px 18px; margin-bottom: 18px;
+  }
+  .chart-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; gap: 8px; }
+  .chart-tabs { display: flex; gap: 3px; background: var(--bg); border-radius: 8px; padding: 3px; }
+  .chart-tab {
+    padding: 5px 11px; border-radius: 6px; border: none; background: transparent;
+    color: var(--muted); font-family: 'Syne', sans-serif; font-size: 0.76rem;
+    font-weight: 600; cursor: pointer; transition: all 0.15s; min-height: 34px;
+  }
+  .chart-tab.active { background: var(--surface2); color: var(--text); }
+  .chart-wrap { height: 190px; position: relative; }
+  canvas { width: 100% !important; }
+
+  /* Level badges */
+  .level-badge {
+    display: inline-block; margin-top: 7px; padding: 3px 9px;
+    border-radius: 20px; font-size: 0.62rem; font-weight: 700;
+    letter-spacing: 1px; text-transform: uppercase;
+  }
+  .lvl-low   { color: var(--green); }
+  .lvl-medium{ color: var(--yellow); }
+  .lvl-high  { color: var(--orange); }
+  .lvl-vhigh { color: var(--red); }
+  .badge-low   { background: #00e67615; color: var(--green); }
+  .badge-medium{ background: #ffd60015; color: var(--yellow); }
+  .badge-high  { background: #ff6b3515; color: var(--orange); }
+  .badge-vhigh { background: #ff174415; color: var(--red); }
+
+  /* History */
+  .history-section {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; padding: 16px 18px; margin-bottom: 18px;
+  }
+  .history-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 12px; gap: 8px; flex-wrap: wrap;
+  }
+  .history-filter { display: flex; gap: 7px; align-items: center; flex-wrap: wrap; }
+  .filter-input {
+    background: var(--bg); border: 1px solid var(--border); color: var(--text);
+    padding: 7px 10px; border-radius: 8px; font-family: 'Space Mono', monospace;
+    font-size: 0.73rem; min-height: 38px;
+  }
+  .clear-btn {
+    background: transparent; border: 1px solid #ff174430; color: var(--red);
+    padding: 7px 11px; border-radius: 8px; cursor: pointer;
+    font-family: 'Syne', sans-serif; font-size: 0.76rem; font-weight: 600;
+    min-height: 38px; transition: all 0.2s;
+  }
+  .clear-btn:hover { background: #ff174415; }
+  .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .history-table { width: 100%; border-collapse: collapse; min-width: 380px; }
+  .history-table th {
+    text-align: left; padding: 7px 10px; font-size: 0.6rem; font-weight: 600;
+    letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted);
+    border-bottom: 1px solid var(--border); white-space: nowrap;
+  }
+  .history-table td { padding: 8px 10px; font-size: 0.79rem; border-bottom: 1px solid #1a2235; }
+  .history-table tr:last-child td { border-bottom: none; }
+  .history-table tr:hover td { background: var(--surface2); }
+  .td-time { font-family: 'Space Mono', monospace; color: var(--muted); font-size: 0.7rem; white-space: nowrap; }
+  .td-czk  { font-family: 'Space Mono', monospace; font-weight: 700; }
+  .bar-mini { height: 4px; border-radius: 2px; margin-top: 4px; min-width: 4px; }
+  .pagination { display: flex; gap: 5px; align-items: center; justify-content: center; margin-top: 12px; flex-wrap: wrap; }
+  .page-btn {
+    background: var(--surface2); border: 1px solid var(--border); color: var(--text);
+    padding: 5px 11px; border-radius: 6px; cursor: pointer;
+    font-family: 'Space Mono', monospace; font-size: 0.72rem; min-height: 34px; min-width: 34px; transition: all 0.15s;
+  }
+  .page-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .page-btn.active { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+  .page-btn:disabled { opacity: 0.3; pointer-events: none; }
+  .page-info { font-size: 0.7rem; color: var(--muted); font-family: 'Space Mono', monospace; }
+
+  /* Status */
+  .status-dot {
+    width: 7px; height: 7px; background: var(--green); border-radius: 50%;
+    display: inline-block; margin-right: 5px; box-shadow: 0 0 5px var(--green);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.4} }
+
+  .spinner {
+    display: inline-block; width: 12px; height: 12px;
+    border: 2px solid rgba(0,212,255,0.3); border-top-color: var(--accent);
+    border-radius: 50%; animation: spin 0.7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .empty-state { text-align: center; padding: 24px; color: var(--muted); font-size: 0.8rem; }
+
+  .tomorrow-badge {
+    background: #00d4ff15; border: 1px solid #00d4ff30; color: var(--accent);
+    padding: 2px 7px; border-radius: 20px; font-size: 0.6rem; font-weight: 700;
+    letter-spacing: 1px; text-transform: uppercase;
+  }
+
+  /* Forecast bar */
+  .forecast-bars { display: flex; gap: 3px; align-items: flex-end; height: 60px; margin-top: 8px; }
+  .forecast-bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; height: 100%; justify-content: flex-end; }
+  .forecast-bar { width: 100%; border-radius: 3px 3px 0 0; background: var(--yellow); min-height: 2px; transition: height 0.4s; }
+  .forecast-bar-label { font-family: 'Space Mono', monospace; font-size: 0.55rem; color: var(--muted); }
+
+  footer {
+    text-align: center; padding: 12px 0; font-size: 0.62rem; color: var(--muted);
+    border-top: 1px solid var(--border);
+  }
+
+  /* Install banner */
+  #installBanner {
+    display: none; position: fixed;
+    bottom: calc(16px + var(--safe-bottom)); left: 16px; right: 16px;
+    background: var(--surface2); border: 1px solid var(--accent);
+    border-radius: 14px; padding: 14px 16px; z-index: 100;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5); animation: slideUp 0.3s ease;
+  }
+  @keyframes slideUp { from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1} }
+  #installBanner p { font-size: 0.8rem; margin-bottom: 10px; }
+  #installBanner p strong { color: var(--accent); }
+  .banner-btns { display: flex; gap: 8px; }
+  .install-btn {
+    background: var(--accent); color: var(--bg); border: none;
+    padding: 8px 16px; border-radius: 8px; font-family: 'Syne', sans-serif;
+    font-weight: 700; font-size: 0.8rem; cursor: pointer; min-height: 38px;
+  }
+  .dismiss-btn {
+    background: transparent; color: var(--muted); border: 1px solid var(--border);
+    padding: 8px 12px; border-radius: 8px; font-family: 'Syne', sans-serif;
+    font-size: 0.8rem; cursor: pointer; min-height: 38px;
+  }
+
+  /* Responsive */
+  @media (max-width: 620px) {
+    .cols-3 { grid-template-columns: 1fr 1fr; }
+    .cols-3 .card:first-child { grid-column: 1 / -1; }
+    .cols-3 .card:first-child .card-value { font-size: 2.3rem; }
+    .cols-4 { grid-template-columns: repeat(2, 1fr); }
+    .next-slots { grid-template-columns: repeat(2, 1fr); }
+    .flow-diagram { grid-template-columns: 1fr 50px 1fr; }
+    .flow-node { min-width: 70px; padding: 8px 10px; }
+    .main-tab { font-size: 0.75rem; }
+  }
+  @media (max-width: 380px) {
+    .cols-2 { grid-template-columns: 1fr; }
+    .card-value { font-size: 1.6rem; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="logo">
+      <div class="logo-icon">⚡</div>
+      <div>
+        <h1>Spotová <span>Elektřina</span> & FVE</h1>
+        <div class="logo-sub">
+          <span class="status-dot" id="statusDot"></span>
+          <span id="statusText">Načítám...</span>
+        </div>
+      </div>
+    </div>
+    <div class="header-right">
+      <button class="refresh-btn" id="refreshBtn" onclick="refreshAll()">
+        <span id="refreshIcon">↻</span> Refresh
+      </button>
+    </div>
+  </header>
+
+  <!-- TABS -->
+  <div class="main-tabs">
+    <button class="main-tab active" onclick="switchTab('fve', this)">⚡ FVE & Baterie</button>
+    <button class="main-tab" onclick="switchTab('ceny', this)">📈 Ceny</button>
+    <button class="main-tab" onclick="switchTab('historie', this)">🕐 Historie</button>
+  </div>
+
+  <!-- ══ TAB: FVE ══ -->
+  <div class="tab-panel active" id="tab-fve">
+
+    <!-- Main FVE cards -->
+    <div class="cards-row cols-3">
+      <div class="card c-yellow">
+        <div class="card-label">☀️ Výroba FVE</div>
+        <div class="card-value big" id="fvePower" style="color:var(--yellow)">—</div>
+        <div class="card-sub" id="fvePowerSub">— W</div>
+        <div class="card-sub2" id="fveTodayYield">Dnes: — kWh</div>
+      </div>
+      <div class="card c-green">
+        <div class="card-label">🏠 Spotřeba</div>
+        <div class="card-value" id="loadPower" style="color:var(--green)">—</div>
+        <div class="card-sub" id="loadSub">W</div>
+      </div>
+      <div class="card c-blue">
+        <div class="card-label">🔌 Síť</div>
+        <div class="card-value" id="gridPower" style="color:var(--accent)">—</div>
+        <div class="card-sub" id="gridSub">W</div>
+        <div class="card-sub2" id="gridDirection">—</div>
+      </div>
+    </div>
+
+    <!-- Battery -->
+    <div class="cards-row cols-2">
+      <div class="card c-purple">
+        <div class="card-label">🔋 Baterie — nabití</div>
+        <div class="card-value" id="batSOC" style="color:var(--purple)">—</div>
+        <div class="card-sub" id="batPower">— W</div>
+        <div class="bat-bar-wrap"><div class="bat-bar" id="batBar" style="width:0%;background:var(--purple)"></div></div>
+        <div class="card-sub2" id="batState">—</div>
+      </div>
+      <div class="card c-orange">
+        <div class="card-label">📊 Dnešní bilance</div>
+        <div class="card-value" id="todayYield" style="color:var(--yellow); font-size:1.4rem;">—</div>
+        <div class="card-sub" id="todayConsume">Spotřeba: — kWh</div>
+        <div class="card-sub" id="todayGrid">Ze sítě: — kWh</div>
+        <div class="card-sub" id="todayFeed">Do sítě: — kWh</div>
+      </div>
+    </div>
+
+    <!-- Energy flow diagram -->
+    <div class="flow-grid">
+      <div class="flow-title">Tok energie</div>
+      <div class="flow-diagram">
+        <!-- Row 1 -->
+        <div class="flow-node">
+          <div class="fn-icon">☀️</div>
+          <div class="fn-label">FVE</div>
+          <div class="fn-value" id="f-solar">—</div>
+        </div>
+        <div class="flow-arrow" id="fa-solar-inv">↓</div>
+        <div class="flow-node">
+          <div class="fn-icon">🔌</div>
+          <div class="fn-label">Síť</div>
+          <div class="fn-value" id="f-grid">—</div>
+        </div>
+        <!-- Row 2 -->
+        <div></div>
+        <div class="flow-node" style="padding:8px;">
+          <div class="fn-icon">⚡</div>
+          <div class="fn-label">Střídač</div>
+        </div>
+        <div></div>
+        <!-- Row 3 -->
+        <div class="flow-node">
+          <div class="fn-icon">🔋</div>
+          <div class="fn-label">Baterie</div>
+          <div class="fn-value" id="f-bat">—</div>
+        </div>
+        <div class="flow-arrow" id="fa-inv-load">↓</div>
+        <div class="flow-node">
+          <div class="fn-icon">🏠</div>
+          <div class="fn-label">Spotřeba</div>
+          <div class="fn-value" id="f-load">—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Solar forecast -->
+    <div class="chart-section">
+      <div class="chart-header">
+        <div class="section-title" style="margin-bottom:0;flex:1;">Předpověď výroby</div>
+        <span id="forecastBadge" style="display:none" class="tomorrow-badge">Victron</span>
+      </div>
+      <div id="forecastContent">
+        <div class="empty-state">Načítám předpověď...</div>
+      </div>
+    </div>
+
+    <!-- Aktuální spotová cena (mini) -->
+    <div class="cards-row cols-2">
+      <div class="card c-blue">
+        <div class="card-label">⚡ Aktuální spotová cena</div>
+        <div class="card-value" id="fve-currentCZK" style="color:var(--accent)">—</div>
+        <div class="card-sub" id="fve-currentEUR">—</div>
+        <span class="level-badge" id="fve-currentLevel">—</span>
+      </div>
+      <div class="card c-green">
+        <div class="card-label">💡 Doporučení</div>
+        <div id="recommendation" style="font-size:0.82rem; line-height:1.5; margin-top:4px; color:var(--muted);">Načítám...</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ══ TAB: CENY ══ -->
+  <div class="tab-panel" id="tab-ceny">
+
+    <div class="cards-row cols-3">
+      <div class="card c-blue">
+        <div class="card-label">⚡ Aktuální cena</div>
+        <div class="card-value big" id="currentCZK" style="color:var(--accent)">—</div>
+        <div class="card-sub" id="currentEUR">— EUR/MWh</div>
+        <div class="card-sub2" id="currentTime">—</div>
+        <span class="level-badge" id="currentLevel">—</span>
+      </div>
+      <div class="card c-green">
+        <div class="card-label">▼ Min dnes</div>
+        <div class="card-value" id="minCZK" style="color:var(--green)">—</div>
+        <div class="card-sub" id="minEUR">—</div>
+        <div class="card-sub2" id="minTime">—</div>
+      </div>
+      <div class="card c-red">
+        <div class="card-label">▲ Max dnes</div>
+        <div class="card-value" id="maxCZK" style="color:var(--red)">—</div>
+        <div class="card-sub" id="maxEUR">—</div>
+        <div class="card-sub2" id="maxTime">—</div>
+      </div>
+    </div>
+
+    <div class="section-title">Následující čtvrthodiny</div>
+    <div class="next-slots" id="nextSlots"></div>
+
+    <div class="chart-section">
+      <div class="chart-header">
+        <div class="section-title" style="margin-bottom:0;flex:1;">Graf spotových cen</div>
+        <div class="chart-tabs">
+          <button class="chart-tab active" onclick="switchPriceChart('today',this)">Dnes</button>
+          <button class="chart-tab" id="tomorrowTab" onclick="switchPriceChart('tomorrow',this)" style="opacity:0.4">Zítra</button>
+        </div>
+      </div>
+      <div class="chart-wrap"><canvas id="priceChart" height="190"></canvas></div>
+    </div>
+
+    <!-- Tomorrow -->
+    <div id="tomorrowSection" style="display:none; margin-bottom:18px;">
+      <div class="section-title">Zítra — přehled <span class="tomorrow-badge">K dispozici</span></div>
+      <div class="cards-row cols-2">
+        <div class="card c-green">
+          <div class="card-label">▼ Min zítra</div>
+          <div class="card-value" id="tMinCZK" style="color:var(--green)">—</div>
+          <div class="card-sub" id="tMinEUR">—</div>
+          <div class="card-sub2" id="tMinTime">—</div>
+        </div>
+        <div class="card c-red">
+          <div class="card-label">▲ Max zítra</div>
+          <div class="card-value" id="tMaxCZK" style="color:var(--red)">—</div>
+          <div class="card-sub" id="tMaxEUR">—</div>
+          <div class="card-sub2" id="tMaxTime">—</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ══ TAB: HISTORIE ══ -->
+  <div class="tab-panel" id="tab-historie">
+    <div class="history-section">
+      <div class="history-header">
+        <div class="section-title" style="margin-bottom:0;flex:1;">Historie cen</div>
+        <div class="history-filter">
+          <input type="date" class="filter-input" id="filterDate" onchange="renderHistory()">
+          <button class="clear-btn" onclick="clearHistory()">🗑 Smazat</button>
+        </div>
+      </div>
+      <div class="table-scroll">
+        <div id="historyContainer"><div class="empty-state">Zatím žádná data.</div></div>
+      </div>
+      <div class="pagination" id="pagination"></div>
+    </div>
+  </div>
+
+  <footer>
+    Ceny: spotovaelektrina.cz · FVE: Victron VRM · Auto-refresh 5 min
+  </footer>
+</div>
+
+<!-- Install banner -->
+<div id="installBanner">
+  <p>⚡ Přidat <strong>Elektřina & FVE</strong> na plochu?</p>
+  <div class="banner-btns">
+    <button class="install-btn" id="installBtn">Přidat na plochu</button>
+    <button class="dismiss-btn" onclick="dismissInstall()">Teď ne</button>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+// ── CONFIG ───────────────────────────────────────────────────
+const VRM_TOKEN   = '9bc3c843b6a71206c602a7dafff09cc2369625dde2250626fccfcf6c23b3f1e0';
+const VRM_SITE    = '467894';
+const VRM_BASE    = 'https://vrmapi.victronenergy.com/v2';
+const PRICE_API   = 'https://spotovaelektrina.cz/api/v1/price/get-prices-json-qh';
+const DB_KEY      = 'elektrina_history';
+const PAGE_SIZE   = 20;
+
+const VRM_HEADERS = { 'X-Authorization': `Token ${VRM_TOKEN}`, 'Content-Type': 'application/json' };
+
+// ── STATE ─────────────────────────────────────────────────────
+let priceData = null;
+let fveData   = null;
+let priceChart = null;
+let fveChart   = null;
+let priceChartMode = 'today';
+let historyPage = 1;
+let deferredPrompt = null;
+
+// ── PWA ───────────────────────────────────────────────────────
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault(); deferredPrompt = e;
+  if (!localStorage.getItem('installDismissed'))
+    setTimeout(() => document.getElementById('installBanner').style.display = 'block', 2000);
+});
+document.getElementById('installBtn').addEventListener('click', async () => {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  const { outcome } = await deferredPrompt.userChoice;
+  if (outcome === 'accepted') localStorage.setItem('installDismissed','1');
+  deferredPrompt = null;
+  document.getElementById('installBanner').style.display = 'none';
+});
+function dismissInstall() {
+  document.getElementById('installBanner').style.display = 'none';
+  localStorage.setItem('installDismissed','1');
+}
+
+if ('serviceWorker' in navigator) {
+  const sw = `const C='el-v1';self.addEventListener('install',e=>e.waitUntil(caches.open(C).then(c=>c.addAll(['./','./index.html','./manifest.json']))));self.addEventListener('fetch',e=>{if(e.request.url.includes('victron')||e.request.url.includes('spotovaelektrina'))return;e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request)));});`;
+  navigator.serviceWorker.register(URL.createObjectURL(new Blob([sw],{type:'application/javascript'}))).catch(()=>{});
+}
+
+// ── TABS ──────────────────────────────────────────────────────
+function switchTab(id, btn) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.main-tab').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  btn.classList.add('active');
+  if (id === 'ceny' && priceData) setTimeout(() => renderPriceChart(priceChartMode), 50);
+}
+
+// ── DB ─────────────────────────────────────────────────────────
+function loadDB() { try { return JSON.parse(localStorage.getItem(DB_KEY)||'[]'); } catch { return []; } }
+function saveDB(db) { localStorage.setItem(DB_KEY, JSON.stringify(db)); }
+
+function storeSnapshot(data) {
+  const db = loadDB(); const ts = Date.now();
+  const dateKey = new Date().toLocaleDateString('cs-CZ');
+  const existing = new Set(db.filter(r=>r.dateKey===dateKey).map(r=>`${r.hour}:${r.minute}`));
+  (data.hoursToday||[]).forEach(s => {
+    if (!existing.has(`${s.hour}:${s.minute}`))
+      db.push({ ts, dateKey, hour:s.hour, minute:s.minute, priceCZK:s.priceCZK, priceEur:s.priceEur, level:s.level });
+  });
+  if (data.hoursTomorrow?.length) {
+    const t = new Date(); t.setDate(t.getDate()+1);
+    const tKey = t.toLocaleDateString('cs-CZ');
+    const ex2 = new Set(db.filter(r=>r.dateKey===tKey).map(r=>`${r.hour}:${r.minute}`));
+    (data.hoursTomorrow||[]).forEach(s => {
+      if (!ex2.has(`${s.hour}:${s.minute}`))
+        db.push({ ts, dateKey:tKey, hour:s.hour, minute:s.minute, priceCZK:s.priceCZK, priceEur:s.priceEur, level:s.level });
+    });
+  }
+  saveDB(db.filter(r=>r.ts >= Date.now()-30*86400000));
+}
+
+// ── HELPERS ───────────────────────────────────────────────────
+const pad = n => String(n).padStart(2,'0');
+const slotLabel = (h,m) => `${pad(h)}:${pad(m)}`;
+function levelClass(l) {
+  if (!l) return 'medium';
+  const s = l.toLowerCase();
+  if (s.includes('low')) return 'low';
+  if ((s.includes('very')&&s.includes('high'))||s==='veryhigh') return 'vhigh';
+  if (s.includes('high')) return 'high';
+  return 'medium';
+}
+function levelLabel(l) {
+  const s=(l||'').toLowerCase();
+  if (s.includes('low')) return 'Nízká';
+  if ((s.includes('very')&&s.includes('high'))||s==='veryhigh') return 'Velmi vysoká';
+  if (s.includes('high')) return 'Vysoká';
+  return 'Střední';
+}
+function curSlotIdx(slots) {
+  const n=new Date(), hh=n.getHours(), mm=Math.floor(n.getMinutes()/15)*15;
+  return slots.findIndex(s=>s.hour===hh&&s.minute===mm);
+}
+function minMax(slots) {
+  let mn=slots[0],mx=slots[0];
+  slots.forEach(s=>{ if(s.priceCZK<mn.priceCZK)mn=s; if(s.priceCZK>mx.priceCZK)mx=s; });
+  return {mn,mx};
+}
+function fmtW(w) {
+  if (w === null || w === undefined || isNaN(w)) return '—';
+  const abs = Math.abs(w);
+  if (abs >= 1000) return (w/1000).toFixed(2) + ' kW';
+  return Math.round(w) + ' W';
+}
+function fmtKWh(v) { return v !== null && !isNaN(v) ? Number(v).toFixed(2)+' kWh' : '—'; }
+
+// ── FETCH PRICES ──────────────────────────────────────────────
+async function fetchPrices() {
+  const r = await fetch(PRICE_API);
+  if (!r.ok) throw new Error('Ceny: HTTP '+r.status);
+  return r.json();
+}
+
+// ── FETCH VRM ─────────────────────────────────────────────────
+async function fetchVRM(path) {
+  const r = await fetch(`${VRM_BASE}${path}`, { headers: VRM_HEADERS });
+  if (!r.ok) throw new Error('VRM: HTTP '+r.status);
+  return r.json();
+}
+
+// ── REFRESH ALL ───────────────────────────────────────────────
+async function refreshAll() {
+  const btn = document.getElementById('refreshBtn');
+  const icon = document.getElementById('refreshIcon');
+  btn.classList.add('loading');
+  icon.innerHTML = '<span class="spinner"></span>';
+
+  let ok = true;
+  try {
+    const [prices, diag, overallStats, forecast] = await Promise.allSettled([
+      fetchPrices(),
+      fetchVRM(`/installations/${VRM_SITE}/diagnostics?count=1000`),
+      fetchVRM(`/installations/${VRM_SITE}/overallstats?type=kwh`),
+      fetchVRM(`/installations/${VRM_SITE}/stats?type=forecast&interval=hours&start=${Math.floor(Date.now()/1000 - 3600)}&end=${Math.floor(Date.now()/1000 + 48*3600)}`)
+    ]);
+
+    if (prices.status === 'fulfilled') {
+      priceData = prices.value;
+      storeSnapshot(priceData);
+      renderPrices(priceData);
+      renderHistory();
+    }
+
+    if (diag.status === 'fulfilled') {
+      fveData = diag.value;
+      renderFVE(diag.value, overallStats.status==='fulfilled' ? overallStats.value : null);
+    } else {
+      document.getElementById('fvePower').textContent = 'Chyba';
+      console.warn('VRM diag error:', diag.reason);
+    }
+
+    if (forecast.status === 'fulfilled') {
+      renderForecast(forecast.value);
+    }
+
+    updateRecommendation();
+    document.getElementById('statusText').textContent = 'Živá data · ' + new Date().toLocaleTimeString('cs-CZ');
+    document.getElementById('statusDot').style.background = 'var(--green)';
+  } catch(e) {
+    ok = false;
+    document.getElementById('statusText').textContent = 'Chyba: ' + e.message;
+    document.getElementById('statusDot').style.background = 'var(--red)';
+  } finally {
+    btn.classList.remove('loading');
+    icon.textContent = '↻';
+  }
+}
+
+// ── RENDER PRICES ─────────────────────────────────────────────
+function renderPrices(data) {
+  const today = data.hoursToday || [];
+  const tomorrow = data.hoursTomorrow || [];
+  if (!today.length) return;
+
+  let idx = curSlotIdx(today); if (idx<0) idx=today.length-1;
+  const cur = today[idx];
+  const lc = levelClass(cur.level);
+
+  // Main
+  ['currentCZK','fve-currentCZK'].forEach(id => document.getElementById(id).textContent = cur.priceCZK+' Kč');
+  ['currentEUR','fve-currentEUR'].forEach(id => document.getElementById(id).textContent = cur.priceEur.toFixed(2)+' EUR/MWh');
+  document.getElementById('currentTime').textContent = slotLabel(cur.hour,cur.minute);
+  ['currentLevel','fve-currentLevel'].forEach(id => {
+    const el = document.getElementById(id);
+    el.textContent = levelLabel(cur.level);
+    el.className = `level-badge badge-${lc}`;
+  });
+
+  // Min/Max
+  const {mn,mx} = minMax(today);
+  document.getElementById('minCZK').textContent = mn.priceCZK+' Kč';
+  document.getElementById('minEUR').textContent = mn.priceEur.toFixed(2)+' EUR/MWh';
+  document.getElementById('minTime').textContent = '⏰ '+slotLabel(mn.hour,mn.minute);
+  document.getElementById('maxCZK').textContent = mx.priceCZK+' Kč';
+  document.getElementById('maxEUR').textContent = mx.priceEur.toFixed(2)+' EUR/MWh';
+  document.getElementById('maxTime').textContent = '⏰ '+slotLabel(mx.hour,mx.minute);
+
+  // Next 4
+  const next4 = [];
+  for (let i=1;i<=4;i++) { if(idx+i<today.length) next4.push({slot:today[idx+i],isT:false}); }
+  if (next4.length<4 && tomorrow.length) {
+    let ti=0; while(next4.length<4&&ti<tomorrow.length) next4.push({slot:tomorrow[ti++],isT:true});
+  }
+  document.getElementById('nextSlots').innerHTML = next4.map(({slot,isT})=>{
+    const lc2=levelClass(slot.level);
+    return `<div class="slot-card">
+      <div class="slot-time">${slotLabel(slot.hour,slot.minute)}${isT?' <span style="font-size:0.58rem;color:var(--accent)">zítra</span>':''}</div>
+      <div class="slot-price lvl-${lc2}">${slot.priceCZK} Kč</div>
+      <div class="slot-eur">${slot.priceEur.toFixed(2)} EUR</div>
+    </div>`;
+  }).join('');
+
+  // Tomorrow
+  if (tomorrow.length) {
+    document.getElementById('tomorrowSection').style.display='block';
+    document.getElementById('tomorrowTab').style.opacity='1';
+    const {mn:tMn,mx:tMx}=minMax(tomorrow);
+    document.getElementById('tMinCZK').textContent=tMn.priceCZK+' Kč';
+    document.getElementById('tMinEUR').textContent=tMn.priceEur.toFixed(2)+' EUR/MWh';
+    document.getElementById('tMinTime').textContent='⏰ '+slotLabel(tMn.hour,tMn.minute);
+    document.getElementById('tMaxCZK').textContent=tMx.priceCZK+' Kč';
+    document.getElementById('tMaxEUR').textContent=tMx.priceEur.toFixed(2)+' EUR/MWh';
+    document.getElementById('tMaxTime').textContent='⏰ '+slotLabel(tMx.hour,tMx.minute);
+  } else {
+    document.getElementById('tomorrowTab').style.opacity='0.4';
+  }
+
+  renderPriceChart(priceChartMode);
+}
+
+// ── RENDER FVE ────────────────────────────────────────────────
+function renderFVE(diagResp, overallResp) {
+  const records = diagResp?.records || [];
+  const get = code => records.find(r=>r.code===code);
+  const getVal = (code, fallback=null) => { const r=get(code); return r ? r.rawValue : fallback; };
+
+  // Solar (MPPT DC power)
+  const solarW = getVal('Pdc') ?? getVal('PPV') ?? 0;
+  // Load
+  const loadW  = getVal('Pc') ?? getVal('LOAD') ?? 0;
+  // Grid (positive = from grid, negative = to grid)
+  const gridW  = getVal('Pg') ?? getVal('GRID') ?? 0;
+  // Battery
+  const batSOC = getVal('SOC');
+  const batW   = getVal('Pb') ?? getVal('I') ?? 0;
+
+  // Display solar
+  document.getElementById('fvePower').textContent = fmtW(solarW);
+  document.getElementById('fvePowerSub').textContent = solarW >= 1000 ? Math.round(solarW)+' W celkem' : '';
+
+  // Load
+  document.getElementById('loadPower').textContent = fmtW(Math.abs(loadW));
+  document.getElementById('loadSub').textContent = 'W spotřeba';
+
+  // Grid
+  const gridAbs = Math.abs(gridW);
+  document.getElementById('gridPower').textContent = fmtW(gridAbs);
+  const fromGrid = gridW > 20;
+  const toGrid   = gridW < -20;
+  document.getElementById('gridSub').textContent = fromGrid ? 'Odběr ze sítě' : toGrid ? 'Přebytek do sítě' : 'W';
+  document.getElementById('gridDirection').textContent = fromGrid ? '← Ze sítě' : toGrid ? '→ Do sítě' : 'Vyrovnáno';
+  document.getElementById('gridPower').style.color = fromGrid ? 'var(--red)' : toGrid ? 'var(--green)' : 'var(--accent)';
+
+  // Battery
+  if (batSOC !== null) {
+    document.getElementById('batSOC').textContent = Math.round(batSOC)+'%';
+    const bar = document.getElementById('batBar');
+    bar.style.width = batSOC+'%';
+    bar.style.background = batSOC>60?'var(--green)':batSOC>30?'var(--yellow)':'var(--red)';
+    const charging = batW > 20, discharging = batW < -20;
+    document.getElementById('batPower').textContent = fmtW(Math.abs(batW)) + (charging?' ↑ nabíjení': discharging?' ↓ vybíjení':'');
+    document.getElementById('batState').textContent = charging ? '🟢 Nabíjí se' : discharging ? '🔴 Vybíjí se' : '⚪ Standby';
+  }
+
+  // Flow diagram
+  document.getElementById('f-solar').textContent = fmtW(solarW);
+  document.getElementById('f-grid').textContent = fmtW(gridAbs);
+  document.getElementById('f-bat').textContent = fmtW(Math.abs(batW));
+  document.getElementById('f-load').textContent = fmtW(Math.abs(loadW));
+
+  // Overall stats (today kWh)
+  if (overallResp?.records) {
+    const rec = overallResp.records;
+    const yieldKwh   = rec.Kwh_System_Solar_Yield_kwh ?? rec['Kwh_System_Solar_Yield'] ?? null;
+    const consumeKwh = rec.Kwh_System_User_Consumption_kwh ?? null;
+    const gridInKwh  = rec.Kwh_System_Grid_To_User_kwh ?? null;
+    const gridOutKwh = rec.Kwh_System_User_To_Grid_kwh ?? null;
+
+    if (yieldKwh !== null) {
+      document.getElementById('todayYield').textContent = fmtKWh(yieldKwh);
+      document.getElementById('fveTodayYield').textContent = 'Dnes: '+fmtKWh(yieldKwh);
+    }
+    if (consumeKwh !== null) document.getElementById('todayConsume').textContent = 'Spotřeba: '+fmtKWh(consumeKwh);
+    if (gridInKwh  !== null) document.getElementById('todayGrid').textContent   = 'Ze sítě: '+fmtKWh(gridInKwh);
+    if (gridOutKwh !== null) document.getElementById('todayFeed').textContent   = 'Do sítě: '+fmtKWh(gridOutKwh);
+  }
+}
+
+// ── FORECAST ─────────────────────────────────────────────────
+function renderForecast(data) {
+  const fc = document.getElementById('forecastContent');
+  const badge = document.getElementById('forecastBadge');
+
+  // Try to find forecast data in the response
+  const records = data?.records;
+  if (!records) { fc.innerHTML = '<div class="empty-state">Předpověď není k dispozici.</div>'; return; }
+
+  // records can be object with attribute arrays
+  // Look for solar forecast key
+  let forecastArr = null;
+  const keys = Object.keys(records);
+  // find key with forecast/solar data
+  for (const k of keys) {
+    if (Array.isArray(records[k]) && records[k].length > 0) {
+      forecastArr = records[k]; break;
+    }
+  }
+
+  if (!forecastArr || forecastArr.length === 0) {
+    fc.innerHTML = '<div class="empty-state">Předpověď výroby není momentálně dostupná z Victron VRM.</div>';
+    return;
+  }
+
+  badge.style.display = 'inline-block';
+  const max = Math.max(...forecastArr.map(f=>f.Value||f.value||0));
+  if (max === 0) { fc.innerHTML = '<div class="empty-state">Předpověď: 0 W (noc nebo oblačno).</div>'; return; }
+
+  // Show bar chart
+  const bars = forecastArr.slice(0, 24).map(f => {
+    const val = f.Value ?? f.value ?? 0;
+    const ts = f.timestamp ? new Date(f.timestamp*1000) : null;
+    const label = ts ? `${pad(ts.getHours())}h` : '';
+    const h = max > 0 ? Math.round((val/max)*56) : 0;
+    return `<div class="forecast-bar-wrap">
+      <div class="forecast-bar" style="height:${h}px" title="${Math.round(val)} W"></div>
+      <div class="forecast-bar-label">${label}</div>
+    </div>`;
+  }).join('');
+
+  const totalKwh = forecastArr.reduce((a,f)=>(a+(f.Value??f.value??0)/1000),0).toFixed(1);
+  fc.innerHTML = `
+    <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+      <span style="font-size:0.7rem;color:var(--muted)">Předpověď výroby — ${forecastArr.length} hodin</span>
+      <span style="font-family:'Space Mono',monospace;font-size:0.75rem;color:var(--yellow)">~${totalKwh} kWh celkem</span>
+    </div>
+    <div class="forecast-bars">${bars}</div>`;
+}
+
+// ── RECOMMENDATION ────────────────────────────────────────────
+function updateRecommendation() {
+  const el = document.getElementById('recommendation');
+  if (!priceData) { el.textContent = 'Čekám na data...'; return; }
+
+  const today = priceData.hoursToday || [];
+  let idx = curSlotIdx(today); if(idx<0) idx=today.length-1;
+  const cur = today[idx];
+  const lc = levelClass(cur.level);
+
+  // Get battery SOC if available
+  const records = fveData?.records || [];
+  const batSOC = records.find(r=>r.code==='SOC')?.rawValue ?? null;
+  const solarW = records.find(r=>r.code==='Pdc')?.rawValue ?? records.find(r=>r.code==='PPV')?.rawValue ?? 0;
+
+  let tips = [];
+
+  if (solarW > 500) tips.push('☀️ FVE vyrábí — využij solární energii');
+  if (lc === 'low') tips.push('💚 Nízká cena — vhodné pro spotřebiče');
+  if (lc === 'vhigh' || lc === 'high') tips.push('🔴 Vysoká cena — omez spotřebu ze sítě');
+  if (batSOC !== null && batSOC < 20 && lc === 'low') tips.push('🔋 Baterie nízká + levná elektřina — dobij ze sítě');
+  if (batSOC !== null && batSOC > 80 && solarW > 200) tips.push('🔋 Baterie plná — přebytek jde do sítě');
+  if (!tips.length) tips.push('ℹ️ Vše v normálu');
+
+  el.innerHTML = tips.map(t=>`<div style="margin-bottom:4px;">${t}</div>`).join('');
+}
+
+// ── PRICE CHART ───────────────────────────────────────────────
+function switchPriceChart(mode, btn) {
+  priceChartMode = mode;
+  document.querySelectorAll('.chart-tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  renderPriceChart(mode);
+}
+
+function renderPriceChart(mode) {
+  if (!priceData) return;
+  const slots = mode==='tomorrow' ? (priceData.hoursTomorrow||[]) : (priceData.hoursToday||[]);
+  if (!slots.length) return;
+
+  const labels = slots.map(s=>s.minute===0?slotLabel(s.hour,s.minute):'');
+  const prices = slots.map(s=>s.priceCZK);
+  const curIdx = mode==='today' ? curSlotIdx(slots) : -1;
+  const bgColors = slots.map((s,i)=>{
+    if(i===curIdx) return 'rgba(0,212,255,1)';
+    const lc=levelClass(s.level);
+    return {low:'rgba(0,230,118,0.7)',medium:'rgba(255,214,0,0.7)',high:'rgba(255,107,53,0.7)',vhigh:'rgba(255,23,68,0.7)'}[lc];
+  });
+
+  const ctx = document.getElementById('priceChart').getContext('2d');
+  if (priceChart) priceChart.destroy();
+  priceChart = new Chart(ctx, {
+    type:'bar', data:{ labels, datasets:[{ data:prices, backgroundColor:bgColors, borderRadius:3, borderSkipped:false }] },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          callbacks:{
+            title:items=>slotLabel(slots[items[0].dataIndex].hour,slots[items[0].dataIndex].minute),
+            label:item=>{const s=slots[item.dataIndex];return[` ${s.priceCZK} Kč/MWh`,` ${s.priceEur.toFixed(2)} EUR`,` ${levelLabel(s.level)}`];}
+          },
+          backgroundColor:'#1a2235',titleColor:'#e8f0fe',bodyColor:'#5c7a99',borderColor:'#1e2d45',borderWidth:1
+        }
+      },
+      scales:{
+        x:{grid:{color:'rgba(30,45,69,0.8)'},ticks:{color:'#5c7a99',font:{family:'Space Mono',size:9}}},
+        y:{grid:{color:'rgba(30,45,69,0.8)'},ticks:{color:'#5c7a99',font:{family:'Space Mono',size:9},callback:v=>v+' Kč'}}
+      }
+    }
+  });
+}
+
+// ── HISTORY ───────────────────────────────────────────────────
+function renderHistory() {
+  const db = loadDB();
+  const fDate = document.getElementById('filterDate').value;
+  let filtered = [...db].sort((a,b)=>{ if(a.dateKey!==b.dateKey)return b.ts-a.ts; if(a.hour!==b.hour)return b.hour-a.hour; return b.minute-a.minute; });
+  if (fDate) {
+    const [y,m,d]=fDate.split('-');
+    const cz=`${parseInt(d)}. ${parseInt(m)}. ${y}`;
+    filtered=filtered.filter(r=>r.dateKey===cz);
+  }
+  const cont=document.getElementById('historyContainer'), pag=document.getElementById('pagination');
+  if(!filtered.length){cont.innerHTML='<div class="empty-state">Žádná data pro zvolené datum.</div>';pag.innerHTML='';return;}
+  const gMax=Math.max(...filtered.map(r=>r.priceCZK));
+  const total=Math.ceil(filtered.length/PAGE_SIZE);
+  if(historyPage>total)historyPage=1;
+  const page=filtered.slice((historyPage-1)*PAGE_SIZE,historyPage*PAGE_SIZE);
+  const colors={low:'var(--green)',medium:'var(--yellow)',high:'var(--orange)',vhigh:'var(--red)'};
+  let html=`<table class="history-table"><thead><tr><th>Datum</th><th>Čas</th><th>CZK/MWh</th><th>EUR/MWh</th><th>Hladina</th><th>Bar</th></tr></thead><tbody>`;
+  page.forEach(r=>{
+    const lc=levelClass(r.level);
+    const bw=Math.round((r.priceCZK/gMax)*100);
+    html+=`<tr><td class="td-time">${r.dateKey}</td><td class="td-time">${slotLabel(r.hour,r.minute)}</td><td class="td-czk lvl-${lc}">${r.priceCZK}</td><td class="td-time">${r.priceEur?.toFixed(2)||'—'}</td><td><span class="level-badge badge-${lc}" style="font-size:0.6rem;padding:2px 6px;">${levelLabel(r.level)}</span></td><td style="width:80px"><div class="bar-mini" style="width:${bw}%;background:${colors[lc]}"></div></td></tr>`;
+  });
+  html+='</tbody></table>';
+  cont.innerHTML=html;
+  let p=`<button class="page-btn" onclick="goPage(${historyPage-1})" ${historyPage<=1?'disabled':''}>‹</button>`;
+  for(let i=Math.max(1,historyPage-2);i<=Math.min(total,historyPage+2);i++)
+    p+=`<button class="page-btn ${i===historyPage?'active':''}" onclick="goPage(${i})">${i}</button>`;
+  p+=`<button class="page-btn" onclick="goPage(${historyPage+1})" ${historyPage>=total?'disabled':''}>›</button>`;
+  p+=`<span class="page-info">${filtered.length} zázn.</span>`;
+  pag.innerHTML=p;
+}
+
+function goPage(p){historyPage=p;renderHistory();}
+function clearHistory(){if(confirm('Smazat celou historii cen?')){localStorage.removeItem(DB_KEY);renderHistory();}}
+
+// ── START ─────────────────────────────────────────────────────
+refreshAll();
+setInterval(refreshAll, 5 * 60 * 1000); // 5 minut
+</script>
+</body>
+</html>
