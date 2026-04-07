@@ -1,0 +1,2779 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Elektřina">
+<meta name="theme-color" content="#080f0a">
+<link rel="manifest" href="manifest.json">
+<title>Energetika | Dashboard</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+:root {
+  --bg:       #080f0a;
+  --bg2:      #0d160f;
+  --surface:  #111a13;
+  --surface2: #162019;
+  --border:   #1e2e20;
+  --border2:  #253028;
+  --accent:   #4ade80;
+  --accent2:  #22c55e;
+  --accentD:  #16a34a;
+  --blue:     #38bdf8;
+  --yellow:   #fbbf24;
+  --red:      #f87171;
+  --orange:   #fb923c;
+  --purple:   #c084fc;
+  --text:     #e8f5e9;
+  --text2:    #9cb89e;
+  --muted:    #4a6650;
+  --safe-top: env(safe-area-inset-top,0px);
+  --safe-bottom: env(safe-area-inset-bottom,0px);
+  --sidebar-w: 220px;
+}
+
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+
+body {
+  font-family:'DM Sans',sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100dvh;
+  display:flex;
+  overflow:hidden;
+}
+
+/* ══ SIDEBAR ══ */
+#sidebar {
+  width:var(--sidebar-w);
+  height:100dvh;
+  background:var(--bg2);
+  border-right:1px solid var(--border);
+  display:flex;
+  flex-direction:column;
+  flex-shrink:0;
+  position:relative;
+  z-index:50;
+  transition:transform 0.3s ease;
+  padding-top:var(--safe-top);
+}
+
+.sb-logo {
+  padding:22px 20px 16px;
+  border-bottom:1px solid var(--border);
+}
+.sb-logo-row {
+  display:flex;align-items:center;gap:10px;
+}
+.sb-logo-icon {
+  width:36px;height:36px;
+  background:linear-gradient(135deg,var(--accent),var(--accentD));
+  border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;flex-shrink:0;
+}
+.sb-logo-title {
+  font-size:1rem;font-weight:600;color:var(--text);line-height:1.2;
+}
+.sb-logo-sub {
+  font-size:0.65rem;color:var(--muted);margin-top:2px;
+  font-family:'Space Mono',monospace;
+  display:flex;align-items:center;gap:5px;
+}
+.live-dot {
+  width:6px;height:6px;background:var(--accent);border-radius:50%;
+  box-shadow:0 0 6px var(--accent);
+  animation:pulse 2s ease-in-out infinite;
+}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* Nav */
+.sb-nav {
+  flex:1;padding:12px 10px;overflow-y:auto;
+  scrollbar-width:none;
+}
+.sb-nav::-webkit-scrollbar{display:none;}
+
+.nav-section-label {
+  font-size:0.6rem;font-weight:600;letter-spacing:2px;
+  text-transform:uppercase;color:var(--muted);
+  padding:10px 10px 4px;
+}
+
+.nav-item {
+  display:flex;align-items:center;gap:10px;
+  padding:9px 12px;border-radius:10px;
+  cursor:pointer;transition:all 0.15s;
+  margin-bottom:2px;color:var(--text2);
+  font-size:0.88rem;font-weight:400;
+  border:1px solid transparent;
+}
+.nav-item:hover{background:var(--surface2);color:var(--text);}
+.nav-item.active{
+  background:var(--surface2);
+  border-color:var(--border2);
+  color:var(--accent);
+  font-weight:500;
+}
+.nav-item .ni-icon{
+  width:28px;height:28px;border-radius:7px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;background:var(--surface);flex-shrink:0;
+  transition:all 0.15s;
+}
+.nav-item.active .ni-icon{background:var(--accentD)20;}
+.nav-item .ni-badge{
+  margin-left:auto;font-size:0.6rem;
+  background:var(--accent)20;color:var(--accent);
+  padding:2px 6px;border-radius:20px;
+  font-family:'Space Mono',monospace;
+}
+
+/* Sidebar bottom */
+.sb-bottom {
+  padding:12px 10px;border-top:1px solid var(--border);
+  padding-bottom:calc(12px + var(--safe-bottom));
+}
+.sb-status-card {
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:12px;padding:10px 12px;margin-bottom:8px;
+}
+.sb-status-row{
+  display:flex;justify-content:space-between;align-items:center;
+  font-size:0.72rem;margin-bottom:4px;
+}
+.sb-status-label{color:var(--muted);}
+.sb-status-val{font-family:'Space Mono',monospace;font-weight:700;}
+
+.sb-bat-bar{height:3px;background:var(--border);border-radius:2px;overflow:hidden;margin-top:6px;}
+.sb-bat-fill{height:100%;border-radius:2px;transition:width 0.5s;}
+
+.countdown-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:6px 12px;
+}
+.countdown-mini{
+  display:flex;align-items:center;gap:6px;
+  font-size:0.68rem;color:var(--muted);font-family:'Space Mono',monospace;
+}
+.cd-ring{position:relative;width:20px;height:20px;}
+.cd-ring svg{transform:rotate(-90deg);}
+.cd-num{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  font-size:0.55rem;color:var(--accent);font-weight:700;
+}
+.refresh-mini{
+  background:var(--surface2);border:1px solid var(--border);
+  color:var(--accent);padding:5px 10px;border-radius:7px;
+  cursor:pointer;font-size:0.75rem;font-weight:600;
+  font-family:'DM Sans',sans-serif;transition:all 0.2s;
+}
+.refresh-mini:hover{background:var(--border);}
+.refresh-mini.loading{opacity:.5;pointer-events:none;}
+
+/* ══ MAIN ══ */
+#main {
+  flex:1;
+  height:100dvh;
+  overflow-y:auto;
+  overflow-x:hidden;
+  padding:0;
+  scrollbar-width:thin;
+  scrollbar-color:var(--border) transparent;
+}
+#main::-webkit-scrollbar{width:4px;}
+#main::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+
+.page {display:none;}
+.page.active{display:block;}
+
+.page-header{
+  position:sticky;top:0;z-index:10;
+  background:var(--bg)dd;
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border);
+  padding:16px 24px;
+  display:flex;align-items:center;justify-content:space-between;
+  gap:12px;
+  padding-top:calc(16px + var(--safe-top));
+}
+.page-title{
+  font-size:1.2rem;font-weight:600;color:var(--text);
+  display:flex;align-items:center;gap:10px;
+}
+.page-title-icon{
+  width:32px;height:32px;border-radius:8px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:16px;
+}
+.page-body{padding:20px 24px;padding-bottom:40px;}
+
+/* ══ CARDS ══ */
+.cards-grid{display:grid;gap:14px;margin-bottom:20px;}
+.g2{grid-template-columns:repeat(2,1fr);}
+.g3{grid-template-columns:repeat(3,1fr);}
+.g4{grid-template-columns:repeat(4,1fr);}
+.g21{grid-template-columns:2fr 1fr;}
+.g12{grid-template-columns:1fr 2fr;}
+
+.card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:16px 18px;
+  position:relative;
+  overflow:hidden;
+}
+.card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:var(--card-accent,transparent);border-radius:14px 14px 0 0;
+}
+.card.ca-green{--card-accent:var(--accent);}
+.card.ca-blue{--card-accent:var(--blue);}
+.card.ca-yellow{--card-accent:var(--yellow);}
+.card.ca-red{--card-accent:var(--red);}
+.card.ca-purple{--card-accent:var(--purple);}
+.card.ca-orange{--card-accent:var(--orange);}
+
+.card-label{
+  font-size:0.65rem;font-weight:600;letter-spacing:1.5px;
+  text-transform:uppercase;color:var(--muted);margin-bottom:8px;
+}
+.card-value{
+  font-family:'Space Mono',monospace;
+  font-size:1.9rem;font-weight:700;line-height:1;margin-bottom:4px;
+}
+.card-value.xl{font-size:2.4rem;}
+.card-value.sm{font-size:1.4rem;}
+.card-sub{font-size:0.7rem;color:var(--muted);font-family:'Space Mono',monospace;}
+.card-sub2{font-size:0.7rem;color:var(--muted);font-family:'Space Mono',monospace;margin-top:4px;}
+
+.bat-bar{height:4px;background:var(--border);border-radius:2px;overflow:hidden;margin-top:8px;}
+.bat-fill{height:100%;border-radius:2px;transition:width .5s;}
+
+/* Level badges */
+.badge{
+  display:inline-block;padding:3px 9px;border-radius:20px;
+  font-size:0.62rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;
+  margin-top:8px;
+}
+.badge-low{background:#4ade8015;color:var(--accent);}
+.badge-medium{background:#fbbf2415;color:var(--yellow);}
+.badge-high{background:#fb923c15;color:var(--orange);}
+.badge-vhigh{background:#f8717115;color:var(--red);}
+.lvl-low{color:var(--accent);}
+.lvl-medium{color:var(--yellow);}
+.lvl-high{color:var(--orange);}
+.lvl-vhigh{color:var(--red);}
+
+/* Section titles */
+.section-title{
+  font-size:0.62rem;font-weight:600;letter-spacing:2px;
+  text-transform:uppercase;color:var(--muted);
+  margin-bottom:12px;
+  display:flex;align-items:center;gap:8px;
+}
+.section-title::after{content:'';flex:1;height:1px;background:var(--border);}
+
+/* Decision card */
+.decision-card{
+  border-radius:16px;padding:20px 22px;margin-bottom:20px;
+  border:1px solid var(--border);
+  background:linear-gradient(135deg,var(--surface),var(--surface2));
+  position:relative;overflow:hidden;
+}
+.decision-card::before{
+  content:'';position:absolute;inset:0;
+  background:var(--dec-color,var(--accent));
+  opacity:.04;pointer-events:none;
+}
+.decision-mode{
+  font-size:1.8rem;font-weight:700;margin:6px 0 4px;
+  font-family:'Space Mono',monospace;
+}
+.decision-reason{font-size:0.82rem;color:var(--text2);line-height:1.6;}
+.decision-action{margin-top:10px;font-size:0.82rem;font-weight:600;}
+
+/* Next slots */
+.slots-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px;}
+.slot{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:12px;padding:12px 8px;text-align:center;
+}
+.slot-time{font-family:'Space Mono',monospace;font-size:0.68rem;color:var(--muted);margin-bottom:5px;}
+.slot-price{font-family:'Space Mono',monospace;font-size:1.1rem;font-weight:700;margin-bottom:2px;}
+.slot-eur{font-size:0.6rem;color:var(--muted);font-family:'Space Mono',monospace;}
+
+/* Charts */
+.chart-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:14px;padding:16px 18px;margin-bottom:20px;
+}
+.chart-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:8px;}
+.chart-tabs{
+  display:flex;gap:3px;background:var(--bg);
+  border-radius:8px;padding:3px;
+}
+.chart-tab{
+  padding:5px 12px;border-radius:6px;border:none;
+  background:transparent;color:var(--muted);
+  font-family:'DM Sans',sans-serif;font-size:0.76rem;
+  font-weight:500;cursor:pointer;transition:all .15s;min-height:32px;
+}
+.chart-tab.active{background:var(--surface2);color:var(--text);}
+.chart-wrap{height:190px;position:relative;}
+canvas{width:100%!important;}
+
+/* Flow SVG */
+.flow-wrap{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:14px;padding:16px 18px;margin-bottom:20px;
+}
+#flowSvg{width:100%;max-width:580px;display:block;margin:0 auto;}
+
+/* History table */
+.table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+.htable{width:100%;border-collapse:collapse;min-width:380px;}
+.htable th{
+  text-align:left;padding:7px 10px;font-size:0.6rem;
+  font-weight:600;letter-spacing:1.5px;text-transform:uppercase;
+  color:var(--muted);border-bottom:1px solid var(--border);white-space:nowrap;
+}
+.htable td{padding:8px 10px;font-size:0.79rem;border-bottom:1px solid var(--border)15;}
+.htable tr:last-child td{border-bottom:none;}
+.htable tr:hover td{background:var(--surface2);}
+.td-mono{font-family:'Space Mono',monospace;font-size:0.72rem;color:var(--muted);white-space:nowrap;}
+.td-val{font-family:'Space Mono',monospace;font-weight:700;}
+.bar-mini{height:3px;border-radius:2px;margin-top:4px;min-width:3px;}
+
+/* Pagination */
+.pagination{display:flex;gap:5px;align-items:center;justify-content:center;margin-top:14px;flex-wrap:wrap;}
+.page-btn{
+  background:var(--surface2);border:1px solid var(--border);color:var(--text);
+  padding:5px 11px;border-radius:6px;cursor:pointer;
+  font-family:'Space Mono',monospace;font-size:0.72rem;
+  min-height:32px;min-width:32px;transition:all .15s;
+}
+.page-btn:hover{border-color:var(--accent);color:var(--accent);}
+.page-btn.active{background:var(--accent);color:var(--bg);border-color:var(--accent);}
+.page-btn:disabled{opacity:.3;pointer-events:none;}
+.page-info{font-size:0.7rem;color:var(--muted);font-family:'Space Mono',monospace;}
+
+/* Settings */
+.cfg-label{font-size:0.68rem;color:var(--muted);display:block;margin-bottom:5px;font-weight:500;letter-spacing:.5px;}
+.cfg-input{
+  width:100%;background:var(--bg);border:1px solid var(--border);
+  color:var(--text);padding:8px 10px;border-radius:8px;
+  font-family:'Space Mono',monospace;font-size:0.82rem;min-height:36px;
+  transition:border-color .15s;
+}
+.cfg-input:focus{outline:none;border-color:var(--accent);}
+.cfg-select{
+  width:100%;background:var(--bg);border:1px solid var(--border);
+  color:var(--text);padding:8px 10px;border-radius:8px;
+  font-family:'DM Sans',sans-serif;font-size:0.82rem;min-height:36px;cursor:pointer;
+}
+.cfg-hint{font-size:0.62rem;color:var(--muted);margin-top:4px;line-height:1.4;}
+.cfg-toggle-row{
+  display:flex;align-items:center;justify-content:space-between;
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:10px;padding:10px 14px;cursor:pointer;
+  font-size:0.82rem;gap:8px;
+}
+.cfg-toggle-row input[type=checkbox]{width:18px;height:18px;cursor:pointer;accent-color:var(--accent);}
+
+/* Override toggle */
+.toggle-track{
+  width:42px;height:22px;background:var(--border);
+  border-radius:11px;position:relative;cursor:pointer;transition:background .2s;
+}
+.toggle-thumb{
+  position:absolute;top:2px;left:2px;width:18px;height:18px;
+  background:#fff;border-radius:50%;transition:transform .2s;
+}
+
+/* Ov buttons */
+.ov-btn{
+  background:transparent;border:1px solid var(--border);color:var(--muted);
+  padding:4px 10px;border-radius:6px;cursor:pointer;
+  font-family:'Space Mono',monospace;font-size:0.72rem;
+  min-height:28px;transition:all .15s;
+}
+.ov-btn:hover{background:var(--surface2);}
+
+/* Node-RED preview */
+.api-url-box{
+  font-family:'Space Mono',monospace;font-size:0.7rem;
+  background:var(--bg);padding:10px 14px;border-radius:8px;
+  border:1px solid var(--border);word-break:break-all;color:var(--accent);
+}
+pre.json-preview{
+  font-family:'Space Mono',monospace;font-size:0.7rem;
+  background:var(--bg);padding:12px 14px;border-radius:8px;
+  border:1px solid var(--border);overflow-x:auto;line-height:1.7;
+  color:var(--text);
+}
+
+/* Tomorrow badge */
+.tmr-badge{
+  background:var(--blue)15;border:1px solid var(--blue)30;color:var(--blue);
+  padding:2px 7px;border-radius:20px;font-size:0.6rem;font-weight:700;
+  letter-spacing:1px;text-transform:uppercase;
+}
+
+/* Forecast bars */
+.forecast-bars{display:flex;gap:3px;align-items:flex-end;height:60px;margin-top:8px;}
+.fc-bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;height:100%;justify-content:flex-end;}
+.fc-bar{width:100%;border-radius:3px 3px 0 0;background:var(--yellow);min-height:2px;transition:height .4s;}
+.fc-bar-label{font-family:'Space Mono',monospace;font-size:.55rem;color:var(--muted);}
+
+/* Empty state */
+.empty-state{text-align:center;padding:28px;color:var(--muted);font-size:.8rem;}
+
+/* Spinner */
+.spinner{display:inline-block;width:12px;height:12px;border:2px solid rgba(74,222,128,.3);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Install banner */
+#installBanner{
+  display:none;position:fixed;
+  bottom:calc(16px + var(--safe-bottom));left:16px;right:16px;
+  background:var(--surface2);border:1px solid var(--accent);
+  border-radius:14px;padding:14px 16px;z-index:200;
+  box-shadow:0 8px 32px rgba(0,0,0,.6);
+}
+#installBanner p{font-size:.8rem;margin-bottom:10px;}
+#installBanner p strong{color:var(--accent);}
+.banner-btns{display:flex;gap:8px;}
+.install-btn{
+  background:var(--accent);color:var(--bg);border:none;
+  padding:8px 16px;border-radius:8px;font-family:'DM Sans',sans-serif;
+  font-weight:700;font-size:.8rem;cursor:pointer;min-height:36px;
+}
+.dismiss-btn{
+  background:transparent;color:var(--muted);border:1px solid var(--border);
+  padding:8px 12px;border-radius:8px;font-family:'DM Sans',sans-serif;
+  font-size:.8rem;cursor:pointer;min-height:36px;
+}
+
+/* Overview hero */
+.hero-price{
+  background:linear-gradient(135deg,var(--surface),var(--surface2));
+  border:1px solid var(--border);border-radius:16px;
+  padding:22px 24px;margin-bottom:20px;
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+  flex-wrap:wrap;
+}
+.hero-left .hero-label{font-size:.62rem;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:4px;}
+.hero-left .hero-val{font-family:'Space Mono',monospace;font-size:3rem;font-weight:700;line-height:1;}
+.hero-left .hero-sub{font-size:.75rem;color:var(--muted);font-family:'Space Mono',monospace;margin-top:4px;}
+.hero-right{text-align:right;}
+.hero-decision{font-size:1.1rem;font-weight:700;margin-bottom:4px;}
+.hero-action{font-size:.78rem;color:var(--text2);max-width:200px;}
+
+/* Mini chart on overview */
+.mini-chart-wrap{height:80px;position:relative;margin-top:8px;}
+
+/* Hamburger */
+#hamburger{
+  display:none;position:fixed;top:calc(14px + var(--safe-top));left:14px;
+  z-index:100;background:var(--surface2);border:1px solid var(--border);
+  color:var(--text);padding:8px 10px;border-radius:10px;cursor:pointer;
+  font-size:1.1rem;line-height:1;
+}
+#sidebarOverlay{
+  display:none;position:fixed;inset:0;
+  background:rgba(0,0,0,.6);z-index:40;
+}
+
+/* ── MOBILE ── */
+@media(max-width:768px){
+  body{flex-direction:column;}
+  #sidebar{
+    position:fixed;top:0;left:0;height:100dvh;
+    transform:translateX(-100%);z-index:60;
+    box-shadow:4px 0 24px rgba(0,0,0,.5);
+  }
+  #sidebar.open{transform:translateX(0);}
+  #main{height:100dvh;padding-top:0;}
+  #hamburger{display:block;}
+  .page-header{padding-left:58px;}
+  .page-body{padding:16px;}
+  .g3{grid-template-columns:1fr 1fr;}
+  .g3 .card:first-child{grid-column:1/-1;}
+  .g3 .card:first-child .card-value{font-size:2.4rem;}
+  .g4{grid-template-columns:1fr 1fr;}
+  .slots-grid{grid-template-columns:1fr 1fr;}
+  .hero-left .hero-val{font-size:2.2rem;}
+  .g21,.g12{grid-template-columns:1fr;}
+}
+@media(max-width:420px){
+  .g2{grid-template-columns:1fr;}
+  .card-value{font-size:1.6rem;}
+}
+</style>
+</head>
+<body>
+
+<!-- Hamburger -->
+<button id="hamburger" onclick="toggleSidebar()">☰</button>
+<div id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+<!-- ══ SIDEBAR ══ -->
+<nav id="sidebar">
+  <div class="sb-logo">
+    <div class="sb-logo-row">
+      <div class="sb-logo-icon">⚡</div>
+      <div>
+        <div class="sb-logo-title">Energetika</div>
+        <div class="sb-logo-sub">
+          <span class="live-dot" id="liveDot"></span>
+          <span id="liveStatus">Načítám...</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sb-nav">
+    <div class="nav-section-label">Hlavní</div>
+    <div class="nav-item active" onclick="navTo('prehled',this)">
+      <div class="ni-icon">📊</div>Přehled
+    </div>
+    <div class="nav-item" onclick="navTo('strategie',this)">
+      <div class="ni-icon">🧠</div>Strategie
+    </div>
+
+    <div class="nav-section-label">Data</div>
+    <div class="nav-item" onclick="navTo('ceny',this)">
+      <div class="ni-icon">📈</div>Cena spot
+    </div>
+    <div class="nav-item" onclick="navTo('fve',this)">
+      <div class="ni-icon">☀️</div>FVE
+    </div>
+
+    <div class="nav-section-label">Integrace</div>
+    <div class="nav-item" onclick="navTo('nodered',this)">
+      <div class="ni-icon">🔗</div>Node-RED
+    </div>
+
+    <div class="nav-section-label">Systém</div>
+    <div class="nav-item" onclick="navTo('nastaveni',this)">
+      <div class="ni-icon">⚙️</div>Nastavení
+    </div>
+    <div class="nav-item" onclick="navTo('historie',this)">
+      <div class="ni-icon">🕐</div>Historie
+    </div>
+  </div>
+
+  <div class="sb-bottom">
+    <div class="sb-status-card">
+      <div class="sb-status-row">
+        <span class="sb-status-label">☀️ FVE</span>
+        <span class="sb-status-val" id="sb-solar" style="color:var(--yellow)">—</span>
+      </div>
+      <div class="sb-status-row">
+        <span class="sb-status-label">🔋 Baterie</span>
+        <span class="sb-status-val" id="sb-soc" style="color:var(--accent)">—</span>
+      </div>
+      <div class="sb-status-row" style="margin-bottom:0;">
+        <span class="sb-status-label">💰 Cena</span>
+        <span class="sb-status-val" id="sb-price" style="color:var(--text)">—</span>
+      </div>
+      <div class="sb-bat-bar">
+        <div class="sb-bat-fill" id="sb-bat-bar" style="width:0%;background:var(--accent)"></div>
+      </div>
+    </div>
+    <div class="countdown-row">
+      <div class="countdown-mini">
+        <div class="cd-ring">
+          <svg width="20" height="20" viewBox="0 0 20 20">
+            <circle cx="10" cy="10" r="8" fill="none" stroke="#1e2e20" stroke-width="2.5"/>
+            <circle id="countdownCircle" cx="10" cy="10" r="8" fill="none"
+              stroke="#4ade80" stroke-width="2.5"
+              stroke-dasharray="50.3" stroke-dashoffset="0" stroke-linecap="round"/>
+          </svg>
+          <div class="cd-num" id="countdownNum">30</div>
+        </div>
+        <span id="countdownLabel">30s</span>
+      </div>
+      <button class="refresh-mini" id="refreshBtn" onclick="refreshAll()">
+        <span id="refreshIcon">↻</span> Refresh
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- ══ MAIN CONTENT ══ -->
+<main id="main">
+
+  <!-- ── PŘEHLED ── -->
+  <div class="page active" id="page-prehled">
+    <div class="page-header">
+      <div class="page-title">
+        <div class="page-title-icon" style="background:#4ade8015;">📊</div>
+        Přehled
+      </div>
+      <span id="lastUpdate" style="font-size:.65rem;color:var(--muted);font-family:'Space Mono',monospace;"></span>
+    </div>
+    <div class="page-body">
+
+      <!-- Hero cena + doporučení -->
+      <div class="hero-price">
+        <div class="hero-left">
+          <div class="hero-label">⚡ Aktuální spotová cena</div>
+          <div class="hero-val" id="ov-price" style="color:var(--accent)">—</div>
+          <div class="hero-sub" id="ov-price-sub">— EUR/MWh · —</div>
+          <span class="badge" id="ov-level">—</span>
+        </div>
+        <div class="hero-right">
+          <div class="hero-decision" id="ov-decision">—</div>
+          <div class="hero-action" id="ov-action" style="color:var(--text2);">—</div>
+        </div>
+      </div>
+
+      <!-- FVE + Baterie + EV + Síť -->
+      <div class="cards-grid g4" style="margin-bottom:20px;">
+        <div class="card ca-yellow">
+          <div class="card-label">☀️ FVE výroba</div>
+          <div class="card-value sm" id="ov-solar" style="color:var(--yellow)">—</div>
+          <div class="card-sub" id="ov-solar-today">Dnes: — kWh</div>
+        </div>
+        <div class="card ca-purple">
+          <div class="card-label">🔋 Baterie</div>
+          <div class="card-value sm" id="ov-soc" style="color:var(--purple)">—</div>
+          <div class="card-sub" id="ov-bat-pwr">—</div>
+          <div class="bat-bar" style="margin-top:8px;"><div class="bat-fill" id="ov-bat-bar" style="width:0%"></div></div>
+        </div>
+        <div class="card ca-blue">
+          <div class="card-label">🚗 EV nabíječka</div>
+          <div class="card-value sm" id="ov-ev" style="color:var(--blue)">—</div>
+          <div class="card-sub" id="ov-ev-status">—</div>
+        </div>
+        <div class="card ca-green">
+          <div class="card-label">🔌 Síť</div>
+          <div class="card-value sm" id="ov-grid" style="color:var(--accent)">—</div>
+          <div class="card-sub" id="ov-grid-dir">—</div>
+        </div>
+      </div>
+
+      <!-- Animovaný tok + mini graf -->
+      <div class="cards-grid g21">
+        <div class="flow-wrap">
+          <div class="section-title">Tok energie</div>
+          <svg id="flowSvg" viewBox="0 0 560 310" xmlns="http://www.w3.org/2000/svg">
+            <defs></defs>
+            <line id="fl-solar" x1="100" y1="75"  x2="265" y2="148" stroke="#1e2e20" stroke-width="3" stroke-linecap="round"/>
+            <line id="fl-grid"  x1="460" y1="75"  x2="295" y2="148" stroke="#1e2e20" stroke-width="3" stroke-linecap="round"/>
+            <line id="fl-load"  x1="295" y1="168" x2="460" y2="248" stroke="#1e2e20" stroke-width="3" stroke-linecap="round"/>
+            <line id="fl-bat"   x1="265" y1="168" x2="100" y2="248" stroke="#1e2e20" stroke-width="3" stroke-linecap="round"/>
+            <line id="fl-ev"    x1="460" y1="262" x2="460" y2="296" stroke="#1e2e20" stroke-width="2" stroke-dasharray="4,3" stroke-linecap="round"/>
+            <g id="flowDots"></g>
+            <!-- FVE -->
+            <rect x="28" y="28" width="144" height="86" rx="12" fill="#111a13" stroke="#1e2e20" stroke-width="1.5"/>
+            <text x="100" y="58" text-anchor="middle" font-size="20">☀️</text>
+            <text x="100" y="76" text-anchor="middle" font-size="9" fill="#4a6650" font-family="DM Sans,sans-serif" letter-spacing="1">FVE</text>
+            <text id="fn-solar-val" x="100" y="100" text-anchor="middle" font-size="14" font-weight="700" fill="#fbbf24" font-family="Space Mono,monospace">—</text>
+            <!-- Síť -->
+            <rect x="388" y="28" width="144" height="86" rx="12" fill="#111a13" stroke="#1e2e20" stroke-width="1.5"/>
+            <text x="460" y="58" text-anchor="middle" font-size="20">🔌</text>
+            <text x="460" y="76" text-anchor="middle" font-size="9" fill="#4a6650" font-family="DM Sans,sans-serif" letter-spacing="1">SÍŤ</text>
+            <text id="fn-grid-val" x="460" y="96" text-anchor="middle" font-size="14" font-weight="700" fill="#38bdf8" font-family="Space Mono,monospace">—</text>
+            <text id="fn-grid-dir" x="460" y="110" text-anchor="middle" font-size="8" fill="#4a6650" font-family="DM Sans,sans-serif">—</text>
+            <!-- Střídač -->
+            <rect x="218" y="130" width="124" height="52" rx="10" fill="#162019" stroke="#4ade8040" stroke-width="1.5"/>
+            <text x="280" y="153" text-anchor="middle" font-size="16">⚡</text>
+            <text x="280" y="172" text-anchor="middle" font-size="8" fill="#4a6650" font-family="DM Sans,sans-serif" letter-spacing="1">ESS</text>
+            <!-- Baterie -->
+            <rect x="28" y="205" width="144" height="90" rx="12" fill="#111a13" stroke="#1e2e20" stroke-width="1.5"/>
+            <text x="100" y="234" text-anchor="middle" font-size="20">🔋</text>
+            <text x="100" y="252" text-anchor="middle" font-size="9" fill="#4a6650" font-family="DM Sans,sans-serif" letter-spacing="1">BAT.</text>
+            <text id="fn-bat-soc" x="100" y="272" text-anchor="middle" font-size="14" font-weight="700" fill="#c084fc" font-family="Space Mono,monospace">—</text>
+            <text id="fn-bat-pwr" x="100" y="286" text-anchor="middle" font-size="8" fill="#4a6650" font-family="Space Mono,monospace">—</text>
+            <!-- Spotřeba -->
+            <rect x="388" y="205" width="144" height="52" rx="12" fill="#111a13" stroke="#1e2e20" stroke-width="1.5"/>
+            <text x="460" y="228" text-anchor="middle" font-size="16">🏠</text>
+            <text x="460" y="244" text-anchor="middle" font-size="9" fill="#4a6650" font-family="DM Sans,sans-serif" letter-spacing="1">ZÁTĚŽ</text>
+            <text id="fn-load-val" x="460" y="260" text-anchor="middle" font-size="12" font-weight="700" fill="#4ade80" font-family="Space Mono,monospace">—</text>
+            <!-- EV -->
+            <rect x="388" y="262" width="144" height="38" rx="10" fill="#111a13" stroke="#1e2e20" stroke-width="1"/>
+            <text x="430" y="278" text-anchor="middle" font-size="11">🚗</text>
+            <text id="fn-ev-val" x="490" y="282" text-anchor="middle" font-size="11" font-weight="700" fill="#38bdf8" font-family="Space Mono,monospace">—</text>
+            <text x="460" y="293" text-anchor="middle" font-size="7" fill="#4a6650" font-family="DM Sans,sans-serif">EV</text>
+          </svg>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:14px;">
+          <div class="card ca-green">
+            <div class="card-label">📊 Dnešní bilance</div>
+            <div class="card-value sm" id="ov-yield" style="color:var(--yellow)">—</div>
+            <div class="card-sub" id="ov-consume">Spotřeba: —</div>
+            <div class="card-sub" id="ov-grid-in">Ze sítě: —</div>
+            <div class="card-sub" id="ov-grid-out">Do sítě: —</div>
+          </div>
+          <div class="card ca-yellow">
+            <div class="card-label">💹 Arbitráž dnes</div>
+            <div class="card-value sm" id="ov-arb" style="color:var(--yellow)">—</div>
+            <div class="card-sub" id="ov-arb-detail">—</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── STRATEGIE ── -->
+  <div class="page" id="page-strategie">
+    <div class="page-header">
+      <div class="page-title"><div class="page-title-icon" style="background:#c084fc15;">🧠</div>Strategie</div>
+    </div>
+    <div class="page-body">
+      <div id="decisionCard" class="decision-card">
+        <div class="card-label">🧠 Aktuální doporučení</div>
+        <div class="decision-mode" id="decisionMode">Načítám...</div>
+        <div class="decision-reason" id="decisionReason">—</div>
+        <div class="decision-action" id="decisionAction"></div>
+      </div>
+      <div class="cards-grid g4">
+        <div class="card ca-blue"><div class="card-label">💰 Cena teď</div><div class="card-value sm" id="s-price" style="color:var(--blue)">—</div><div class="card-sub">Kč/MWh</div></div>
+        <div class="card ca-purple"><div class="card-label">🔋 Baterie</div><div class="card-value sm" id="s-soc" style="color:var(--purple)">—</div><div class="card-sub" id="s-soc-kwh">— kWh</div></div>
+        <div class="card ca-yellow"><div class="card-label">☀️ FVE výroba</div><div class="card-value sm" id="s-solar" style="color:var(--yellow)">—</div><div class="card-sub">aktuálně</div></div>
+        <div class="card ca-green"><div class="card-label">📊 Pozice dne</div><div class="card-value sm" id="s-position" style="color:var(--accent)">—</div><div class="card-sub" id="s-position-sub">percentil</div></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-header">
+          <div class="section-title" style="margin-bottom:0;flex:1;">Timeline strategie</div>
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div style="display:flex;gap:8px;font-size:.6rem;color:var(--muted);">
+              <span style="color:var(--red)">● Prodej</span>
+              <span style="color:var(--accent)">● Nákup</span>
+              <span style="color:var(--yellow)">● Solár</span>
+              <span style="color:var(--muted)">● Standby</span>
+            </div>
+            <div class="chart-tabs">
+              <button class="chart-tab active" id="strat-tab-today" onclick="switchStrategyChart('today',this)">Dnes</button>
+              <button class="chart-tab" id="strat-tab-tomorrow" onclick="switchStrategyChart('tomorrow',this)" style="opacity:.4;">Zítra</button>
+            </div>
+          </div>
+        </div>
+        <div class="chart-wrap" style="height:160px;"><canvas id="strategyChart" height="160"></canvas></div>
+      </div>
+      <div class="cards-grid g2">
+        <div class="card ca-green"><div class="card-label">🟢 Nejlepší nákup dnes</div><div id="bestBuySlots" style="margin-top:8px;font-size:.78rem;line-height:1.9;">—</div></div>
+        <div class="card ca-red"><div class="card-label">🔴 Nejlepší prodej dnes</div><div id="bestSellSlots" style="margin-top:8px;font-size:.78rem;line-height:1.9;">—</div></div>
+      </div>
+      <div id="tomorrowStrategy" style="display:none;margin-bottom:20px;">
+        <div class="section-title">Výhled na zítřek <span class="tmr-badge">K dispozici</span></div>
+        <div class="cards-grid g2">
+          <div class="card ca-green"><div class="card-label">🟢 Nejlepší nákup zítra</div><div id="tmrBuySlots" style="margin-top:8px;font-size:.78rem;line-height:1.9;">—</div></div>
+          <div class="card ca-red"><div class="card-label">🔴 Nejlepší prodej zítra</div><div id="tmrSellSlots" style="margin-top:8px;font-size:.78rem;line-height:1.9;">—</div></div>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:20px;">
+        <div class="card-label" style="margin-bottom:12px;">⚙️ Prahy strategie</div>
+        <div class="cards-grid g2">
+          <div><label class="cfg-label">Nakupovat pod (Kč/MWh)</label><input type="number" id="cfg-buy" value="1000" class="cfg-input" oninput="saveConfig();renderStrategy()"></div>
+          <div><label class="cfg-label">Prodávat nad (Kč/MWh)</label><input type="number" id="cfg-sell" value="2500" class="cfg-input" oninput="saveConfig();renderStrategy()"></div>
+          <div><label class="cfg-label">Min. SOC rezerva (%)</label><input type="number" id="cfg-soc" value="0" min="0" max="90" class="cfg-input" oninput="saveConfig();renderStrategy()"></div>
+          <div><label class="cfg-label">Kapacita baterie (kWh)</label><input type="number" id="cfg-bat" value="60" class="cfg-input" oninput="saveConfig();renderStrategy()"></div>
+        </div>
+        <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border);">
+          <div class="card-label" style="margin-bottom:10px;">🔌 Ruční Grid Setpoint</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button onclick="setGridSetpoint(-7000)" class="ov-btn" style="color:var(--red);border-color:var(--red);">-7kW MAX</button>
+            <button onclick="setGridSetpoint(-5000)" class="ov-btn" style="color:var(--red);border-color:var(--red);">-5kW</button>
+            <button onclick="setGridSetpoint(-3000)" class="ov-btn" style="color:var(--orange);border-color:var(--orange);">-3kW</button>
+            <button onclick="setGridSetpoint(-50)"   class="ov-btn" style="color:var(--muted);">-50W</button>
+            <button onclick="setGridSetpoint(0)"     class="ov-btn">0W</button>
+            <button onclick="setGridSetpoint(3000)"  class="ov-btn" style="color:var(--accent);border-color:var(--accent);">+3kW</button>
+            <button onclick="setGridSetpoint(5000)"  class="ov-btn" style="color:var(--accent);border-color:var(--accent);">+5kW</button>
+            <button onclick="setGridSetpoint(7000)"  class="ov-btn" style="color:var(--blue);border-color:var(--blue);">+7kW MAX</button>
+          </div>
+          <div id="setpointStatus" style="margin-top:8px;font-size:.72rem;color:var(--muted);font-family:'Space Mono',monospace;"></div>
+        </div>
+      </div>
+      <div class="card ca-orange">
+        <div class="card-label">💹 Arbitrážní kalkulačka</div>
+        <div class="cards-grid g3" style="margin-top:10px;">
+          <div><div style="font-size:.62rem;color:var(--muted);margin-bottom:3px;">Min. nákup</div><div id="arb-buy" style="font-family:'Space Mono',monospace;font-size:1rem;font-weight:700;color:var(--accent);">—</div><div id="arb-buy-time" style="font-size:.62rem;color:var(--muted);margin-top:2px;">—</div></div>
+          <div><div style="font-size:.62rem;color:var(--muted);margin-bottom:3px;">Max. prodej</div><div id="arb-sell" style="font-family:'Space Mono',monospace;font-size:1rem;font-weight:700;color:var(--red);">—</div><div id="arb-sell-time" style="font-size:.62rem;color:var(--muted);margin-top:2px;">—</div></div>
+          <div><div style="font-size:.62rem;color:var(--muted);margin-bottom:3px;">Max. zisk</div><div id="arb-spread" style="font-family:'Space Mono',monospace;font-size:1rem;font-weight:700;color:var(--yellow);">—</div><div id="arb-kwh" style="font-size:.62rem;color:var(--muted);margin-top:2px;">—</div></div>
+        </div>
+        <div id="arb-detail" style="margin-top:12px;padding-top:10px;border-top:1px solid #ffffff08;font-size:.76rem;line-height:1.9;color:var(--muted);font-family:'Space Mono',monospace;"></div>
+        <div style="margin-top:10px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+          <span style="font-size:.68rem;color:var(--muted);">Počítat pro:</span>
+          <input type="range" id="arb-slider" min="1" max="60" value="60" style="flex:1;min-width:80px;" oninput="updateArbSlider()">
+          <span id="arb-slider-val" style="font-family:'Space Mono',monospace;font-size:.78rem;min-width:50px;">60 kWh</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── CENA SPOT ── -->
+  <div class="page" id="page-ceny">
+    <div class="page-header">
+      <div class="page-title"><div class="page-title-icon" style="background:#fbbf2415;">📈</div>Cena spot</div>
+    </div>
+    <div class="page-body">
+      <div class="cards-grid g3">
+        <div class="card ca-blue">
+          <div class="card-label">⚡ Aktuální cena</div>
+          <div class="card-value xl" id="currentCZK" style="color:var(--blue)">—</div>
+          <div class="card-sub" id="currentEUR">— EUR/MWh</div>
+          <div class="card-sub2" id="currentTime">—</div>
+          <span class="badge" id="currentLevel">—</span>
+        </div>
+        <div class="card ca-green">
+          <div class="card-label">▼ Minimum dnes</div>
+          <div class="card-value" id="minCZK" style="color:var(--accent)">—</div>
+          <div class="card-sub" id="minEUR">—</div>
+          <div class="card-sub2" id="minTime">—</div>
+        </div>
+        <div class="card ca-red">
+          <div class="card-label">▲ Maximum dnes</div>
+          <div class="card-value" id="maxCZK" style="color:var(--red)">—</div>
+          <div class="card-sub" id="maxEUR">—</div>
+          <div class="card-sub2" id="maxTime">—</div>
+        </div>
+      </div>
+      <div class="section-title">Následující čtvrthodiny</div>
+      <div class="slots-grid" id="nextSlots"></div>
+      <div class="chart-card">
+        <div class="chart-header">
+          <div class="section-title" style="margin-bottom:0;flex:1;">Graf spotových cen</div>
+          <div class="chart-tabs">
+            <button class="chart-tab active" onclick="switchPriceChart('today',this)">Dnes</button>
+            <button class="chart-tab" id="tomorrowTab" onclick="switchPriceChart('tomorrow',this)" style="opacity:.4">Zítra</button>
+          </div>
+        </div>
+        <div class="chart-wrap"><canvas id="priceChart" height="190"></canvas></div>
+      </div>
+      <div id="tomorrowSection" style="display:none;margin-bottom:20px;">
+        <div class="section-title">Zítra <span class="tmr-badge">K dispozici</span></div>
+        <div class="cards-grid g2">
+          <div class="card ca-green"><div class="card-label">▼ Min zítra</div><div class="card-value" id="tMinCZK" style="color:var(--accent)">—</div><div class="card-sub" id="tMinEUR">—</div><div class="card-sub2" id="tMinTime">—</div></div>
+          <div class="card ca-red"><div class="card-label">▲ Max zítra</div><div class="card-value" id="tMaxCZK" style="color:var(--red)">—</div><div class="card-sub" id="tMaxEUR">—</div><div class="card-sub2" id="tMaxTime">—</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── FVE ── -->
+  <div class="page" id="page-fve">
+    <div class="page-header">
+      <div class="page-title"><div class="page-title-icon" style="background:#fbbf2415;">☀️</div>FVE</div>
+    </div>
+    <div class="page-body">
+      <div class="cards-grid g3">
+        <div class="card ca-yellow">
+          <div class="card-label">☀️ Výroba FVE</div>
+          <div class="card-value xl" id="fvePower" style="color:var(--yellow)">—</div>
+          <div class="card-sub" id="fvePowerSub"></div>
+          <div class="card-sub2" id="fveTodayYield">Dnes: —</div>
+        </div>
+        <div class="card ca-green">
+          <div class="card-label">🏠 Spotřeba</div>
+          <div class="card-value" id="loadPower" style="color:var(--accent)">—</div>
+          <div class="card-sub" id="loadSub">W</div>
+        </div>
+        <div class="card ca-blue">
+          <div class="card-label">🔌 Síť</div>
+          <div class="card-value" id="gridPower" style="color:var(--blue)">—</div>
+          <div class="card-sub" id="gridSub">W</div>
+          <div class="card-sub2" id="gridDirection">—</div>
+        </div>
+      </div>
+      <div class="cards-grid g3">
+        <div class="card ca-purple">
+          <div class="card-label">🔋 Baterie</div>
+          <div class="card-value" id="batSOC" style="color:var(--purple)">—</div>
+          <div class="card-sub" id="batPower">—</div>
+          <div class="bat-bar"><div class="bat-fill" id="batBar" style="width:0%"></div></div>
+          <div class="card-sub2" id="batState">—</div>
+        </div>
+        <div class="card ca-blue">
+          <div class="card-label">🚗 EV nabíječka</div>
+          <div class="card-value" id="ev-power" style="color:var(--blue)">—</div>
+          <div class="card-sub" id="ev-status">—</div>
+          <div class="card-sub2" id="ev-session">Session: —</div>
+        </div>
+        <div class="card ca-orange">
+          <div class="card-label">📊 Dnešní bilance</div>
+          <div class="card-value sm" id="todayYield" style="color:var(--yellow)">—</div>
+          <div class="card-sub" id="todayConsume">Spotřeba: —</div>
+          <div class="card-sub" id="todayGrid">Ze sítě: —</div>
+          <div class="card-sub" id="todayFeed">Do sítě: —</div>
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-header">
+          <div class="section-title" style="margin-bottom:0;flex:1;">Předpověď výroby</div>
+          <span id="forecastBadge" style="display:none" class="tmr-badge">Victron</span>
+        </div>
+        <div id="forecastContent"><div class="empty-state">Načítám předpověď...</div></div>
+      </div>
+      <div class="cards-grid g2">
+        <div class="card ca-blue">
+          <div class="card-label">⚡ Aktuální spotová cena</div>
+          <div class="card-value sm" id="fve-currentCZK" style="color:var(--blue)">—</div>
+          <div class="card-sub" id="fve-currentEUR">—</div>
+          <span class="badge" id="fve-currentLevel">—</span>
+        </div>
+        <div class="card ca-green">
+          <div class="card-label">💡 Doporučení</div>
+          <div id="recommendation" style="font-size:.82rem;line-height:1.6;margin-top:4px;color:var(--muted);">Načítám...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── NODE-RED ── -->
+  <div class="page" id="page-nodered">
+    <div class="page-header">
+      <div class="page-title"><div class="page-title-icon" style="background:#38bdf815;">🔗</div>Node-RED</div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <div class="api-url-box" id="api-url" style="font-size:.65rem;padding:6px 10px;max-width:320px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">—</div>
+        <button onclick="copyApiUrl()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:.75rem;min-height:32px;">📋</button>
+      </div>
+    </div>
+    <div class="page-body">
+
+      <!-- Aktuální stav JSON -->
+      <div class="cards-grid g4" style="margin-bottom:20px;">
+        <div class="card ca-blue">
+          <div class="card-label">💰 Spot cena</div>
+          <div class="card-value sm" id="nr-spot" style="color:var(--blue)">—</div>
+          <div class="card-sub">Kč/MWh</div>
+        </div>
+        <div class="card ca-red">
+          <div class="card-label">🛒 Reálná nákupní</div>
+          <div class="card-value sm" id="nr-buy-price" style="color:var(--red)">—</div>
+          <div class="card-sub" id="nr-buy-tariff">Kč/MWh s DPH</div>
+        </div>
+        <div class="card ca-green">
+          <div class="card-label">💸 Reálná prodejní</div>
+          <div class="card-value sm" id="nr-sell-price" style="color:var(--accent)">—</div>
+          <div class="card-sub" id="nr-sell-spread">Kč/MWh</div>
+        </div>
+        <div class="card ca-yellow">
+          <div class="card-label">📊 Arbitráž dnes</div>
+          <div class="card-value sm" id="nr-arb" style="color:var(--yellow)">—</div>
+          <div class="card-sub" id="nr-arb-detail">max. zisk Kč</div>
+        </div>
+      </div>
+
+      <!-- Pravidla -->
+      <div class="section-title">Pravidla pro JSON výstup</div>
+
+      <!-- Pravidlo 1: Grid setpoint prodej -->
+      <div class="card" style="margin-bottom:12px;border-left:3px solid var(--red);border-radius:0 14px 14px 0;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+          <div>
+            <div style="font-weight:600;font-size:.9rem;">🔴 Grid setpoint — Prodej do sítě</div>
+            <div style="font-size:.72rem;color:var(--muted);margin-top:2px;">Pokud spot cena > práh → nastav setpoint</div>
+          </div>
+          <div style="font-family:'Space Mono',monospace;font-size:.8rem;color:var(--red);" id="rule1-status">—</div>
+        </div>
+        <div class="cards-grid g2">
+          <div>
+            <label class="cfg-label">Prodávat pokud spot cena > (Kč/MWh)</label>
+            <input type="number" id="rule-sell-above" class="cfg-input" value="2500" oninput="saveRules();updateRuleStatus()">
+          </div>
+          <div>
+            <label class="cfg-label">Grid setpoint při prodeji (W) — záporné!</label>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <input type="range" id="rule-sell-setpoint" min="-7000" max="-500" step="500" value="-5000" style="flex:1;" oninput="document.getElementById('rule-sell-setpoint-val').textContent=(+this.value).toLocaleString('cs-CZ')+' W';saveRules();updateRuleStatus()">
+              <span id="rule-sell-setpoint-val" style="font-family:'Space Mono',monospace;font-size:.8rem;color:var(--red);min-width:70px;text-align:right;">-5 000 W</span>
+            </div>
+            <div style="display:flex;gap:5px;margin-top:6px;flex-wrap:wrap;">
+              <button onclick="setRuleSP(-7000)" class="ov-btn" style="color:var(--red);">-7k</button>
+              <button onclick="setRuleSP(-5000)" class="ov-btn" style="color:var(--red);">-5k</button>
+              <button onclick="setRuleSP(-3000)" class="ov-btn" style="color:var(--orange);">-3k</button>
+              <button onclick="setRuleSP(-1000)" class="ov-btn">-1k</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pravidlo 2: Min cena prodeje -->
+      <div class="card" style="margin-bottom:12px;border-left:3px solid var(--orange);border-radius:0 14px 14px 0;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+          <div>
+            <div style="font-weight:600;font-size:.9rem;">🟠 Minimální cena prodeje</div>
+            <div style="font-size:.72rem;color:var(--muted);margin-top:2px;">Pod tuto cenu se do sítě neprodává (setpoint = -50W)</div>
+          </div>
+          <div style="font-family:'Space Mono',monospace;font-size:.8rem;color:var(--orange);" id="rule2-status">—</div>
+        </div>
+        <div>
+          <label class="cfg-label">Blokovat prodej pokud spot cena &lt; (Kč/MWh)</label>
+          <input type="number" id="rule-min-sell" class="cfg-input" value="500" oninput="saveRules();updateRuleStatus()">
+          <div class="cfg-hint">Pod touto hodnotou je setpoint nastaven na -50W (minimální přetok)</div>
+        </div>
+      </div>
+
+      <!-- Pravidlo 3: Nákup ze sítě -->
+      <div class="card" style="margin-bottom:12px;border-left:3px solid var(--accent);border-radius:0 14px 14px 0;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+          <div>
+            <div style="font-weight:600;font-size:.9rem;">🟢 Nákup ze sítě — nabíjení baterie</div>
+            <div style="font-size:.72rem;color:var(--muted);margin-top:2px;">Pokud reálná nákupní cena &lt; práh → nastav SOC limit a setpoint</div>
+          </div>
+          <div style="font-family:'Space Mono',monospace;font-size:.8rem;color:var(--accent);" id="rule3-status">—</div>
+        </div>
+        <div class="cards-grid g2">
+          <div>
+            <label class="cfg-label">Nakupovat pokud reálná cena &lt; (Kč/MWh s DPH)</label>
+            <input type="number" id="rule-buy-below" class="cfg-input" value="3500" oninput="saveRules();updateRuleStatus()">
+            <div class="cfg-hint" id="rule-buy-hint">— aktuální reálná cena</div>
+          </div>
+          <div>
+            <label class="cfg-label">Cílový SOC při nákupu (%)</label>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <input type="range" id="rule-buy-soc" min="50" max="100" step="5" value="100" style="flex:1;" oninput="document.getElementById('rule-buy-soc-val').textContent=this.value+'%';saveRules()">
+              <span id="rule-buy-soc-val" style="font-family:'Space Mono',monospace;font-size:.8rem;color:var(--accent);min-width:40px;text-align:right;">100%</span>
+            </div>
+            <div style="display:flex;gap:5px;margin-top:6px;flex-wrap:wrap;">
+              <button onclick="setRuleSOC(80)"  class="ov-btn">80%</button>
+              <button onclick="setRuleSOC(90)"  class="ov-btn">90%</button>
+              <button onclick="setRuleSOC(100)" class="ov-btn" style="color:var(--accent);">100%</button>
+            </div>
+          </div>
+          <div>
+            <label class="cfg-label">Grid setpoint při nákupu (W) — kladné!</label>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <input type="range" id="rule-buy-setpoint" min="1000" max="7000" step="500" value="5000" style="flex:1;" oninput="document.getElementById('rule-buy-setpoint-val').textContent='+'+parseInt(this.value).toLocaleString('cs-CZ')+' W';saveRules()">
+              <span id="rule-buy-setpoint-val" style="font-family:'Space Mono',monospace;font-size:.8rem;color:var(--accent);min-width:70px;text-align:right;">+5 000 W</span>
+            </div>
+          </div>
+          <div style="display:flex;align-items:flex-end;padding-bottom:4px;">
+            <div class="cfg-hint" style="font-size:.75rem;">💡 Záporná cena = vždy nakupuj na max bez ohledu na práh</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pravidlo 4: Blokace přetoků -->
+      <div class="card" style="margin-bottom:20px;border-left:3px solid var(--purple);border-radius:0 14px 14px 0;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+          <div>
+            <div style="font-weight:600;font-size:.9rem;">🟣 Blokace přetoků do sítě</div>
+            <div style="font-size:.72rem;color:var(--muted);margin-top:2px;">Pod tuto cenu se nevyplatí prodávat — blokuj přetoky (block_export = true)</div>
+          </div>
+          <div style="font-family:'Space Mono',monospace;font-size:.8rem;color:var(--purple);" id="rule4-status">—</div>
+        </div>
+        <div>
+          <label class="cfg-label">Blokovat přetoky pokud spot cena &lt; (Kč/MWh)</label>
+          <input type="number" id="rule-block-export" class="cfg-input" value="1000" oninput="saveRules();updateRuleStatus()">
+          <div class="cfg-hint">Nad touto hodnotou jsou přetoky povoleny (block_export = false)</div>
+        </div>
+      </div>
+
+      <!-- Uložit pravidla -->
+      <div style="display:flex;gap:10px;align-items:center;margin-bottom:24px;flex-wrap:wrap;">
+        <button onclick="saveRulesAll()" style="background:var(--accent);color:var(--bg);border:none;padding:10px 24px;border-radius:10px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.9rem;font-weight:700;min-height:40px;">💾 Uložit pravidla</button>
+        <div id="rules-save-status" style="font-size:.72rem;font-family:'Space Mono',monospace;color:var(--muted);"></div>
+      </div>
+
+      <!-- Živý JSON výstup -->
+      <div class="section-title">Aktuální JSON výstup endpointu</div>
+      <div class="card" style="margin-bottom:20px;border-color:var(--border);">
+        <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center;">
+          <button onclick="testApiEndpoint()" style="background:var(--surface2);border:1px solid var(--accent)30;color:var(--accent);padding:7px 14px;border-radius:8px;cursor:pointer;font-size:.78rem;min-height:34px;">▶ Načíst JSON</button>
+          <div style="font-size:.7rem;color:var(--muted);">Node-RED: HTTP GET každou minutu → <code style="color:var(--text);">msg.payload.grid_setpoint</code> atd.</div>
+        </div>
+        <div id="api-preview" style="display:none;">
+          <pre class="json-preview" id="api-json" style="max-height:300px;overflow-y:auto;"></pre>
+        </div>
+        <div id="api-preview-empty" style="color:var(--muted);font-size:.78rem;">Klikni "Načíst JSON" pro zobrazení aktuální odpovědi endpointu.</div>
+      </div>
+
+      <!-- Nejlepší okna -->
+      <div class="section-title">Nejlepší okna dnes</div>
+      <div class="cards-grid g2">
+        <div class="card ca-green"><div class="card-label">🟢 Nejlevnější nákup</div><div id="nr-best-buy" style="margin-top:8px;font-size:.78rem;line-height:1.9;">—</div></div>
+        <div class="card ca-red"><div class="card-label">🔴 Nejdražší prodej</div><div id="nr-best-sell" style="margin-top:8px;font-size:.78rem;line-height:1.9;">—</div></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── NASTAVENÍ ── -->
+  <div class="page" id="page-nastaveni">
+    <div class="page-header">
+      <div class="page-title"><div class="page-title-icon" style="background:#4a665015;">⚙️</div>Nastavení</div>
+    </div>
+    <div class="page-body">
+      <div class="card" style="margin-bottom:16px;">
+        <div class="card-label" style="margin-bottom:14px;">🏢 Distributor & Tarif</div>
+        <div class="cards-grid g2">
+          <div><label class="cfg-label">Distributor</label><select id="ns-distributor" class="cfg-select" onchange="onDistributorChange()"><option value="cez">ČEZ Distribuce</option><option value="egd">EG.D (E.ON)</option><option value="pre">PREdistribuce (Praha)</option></select></div>
+          <div><label class="cfg-label">Distribuční sazba</label><select id="ns-tariff" class="cfg-select" onchange="onTariffChange()"><option value="D01d">D01d — Standard jednot.</option><option value="D02d">D02d — Standard dvout.</option><option value="D25d">D25d — Bojler (8h NT)</option><option value="D26d">D26d — Akumulace</option><option value="D27d">D27d — Elektromobilita</option><option value="D35d">D35d — Přímotop</option><option value="D45d">D45d — TČ vzduch/voda</option><option value="D56d">D56d — TČ (22h NT)</option><option value="D57d" selected>D57d — TČ/FVE (20h NT)</option><option value="D61d">D61d — Víkend</option></select></div>
+          <div><label class="cfg-label">Distribuce VT (Kč/MWh bez DPH)</label><input type="number" id="ns-dist-vt" class="cfg-input" value="2248" oninput="saveNastaveni()"><div class="cfg-hint" id="ns-dist-vt-hint"></div></div>
+          <div><label class="cfg-label">Distribuce NT (Kč/MWh bez DPH)</label><input type="number" id="ns-dist-nt" class="cfg-input" value="" placeholder="prázdné = bez NT" oninput="saveNastaveni()"><div class="cfg-hint" id="ns-dist-nt-hint"></div></div>
+          <div><label class="cfg-label">Jistič</label><select id="ns-fuse" class="cfg-select" onchange="saveNastaveni()"><option value="10">1×25A / 3×10A</option><option value="16">3×16A</option><option value="20">3×20A</option><option value="25" selected>3×25A</option><option value="32">3×32A</option><option value="40">3×40A</option></select></div>
+          <div><label class="cfg-label">Stálá platba jistič (Kč/měsíc bez DPH)</label><input type="number" id="ns-fuse-fee" class="cfg-input" value="605" oninput="saveNastaveni()"></div>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:16px;">
+        <div class="card-label" style="margin-bottom:14px;">⚡ Obchodník</div>
+        <div class="cards-grid g2">
+          <div><label class="cfg-label">Název obchodníka</label><input type="text" id="ns-trader-name" class="cfg-input" value="Delta Green" oninput="saveNastaveni()"></div>
+          <div><label class="cfg-label">Název tarifu</label><input type="text" id="ns-trader-tariff" class="cfg-input" value="Spot s výkupem FVE" oninput="saveNastaveni()"></div>
+          <div><label class="cfg-label">Přirážka nákup (Kč/MWh bez DPH)</label><input type="number" id="ns-buy-markup" class="cfg-input" value="350" oninput="saveNastaveni()"></div>
+          <div><label class="cfg-label">Srážka prodej (Kč/MWh)</label><input type="number" id="ns-sell-markup" class="cfg-input" value="450" oninput="saveNastaveni()"><div class="cfg-hint">Victron/Solax data = 450, ostatní = 600</div></div>
+          <div><label class="cfg-label">Měsíční paušál (Kč/měsíc bez DPH)</label><input type="number" id="ns-monthly-fee" class="cfg-input" value="129" oninput="saveNastaveni()"></div>
+          <div><label class="cfg-label">DPH (%)</label><input type="number" id="ns-dph" class="cfg-input" value="21" oninput="saveNastaveni()"></div>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:16px;">
+        <div class="card-label" style="margin-bottom:14px;">☀️ FVE & Baterie</div>
+        <div class="cards-grid g2">
+          <div><label class="cfg-label">Výkon FVE (kWp)</label><input type="number" id="ns-pv-kwp" class="cfg-input" value="15" step=".5" oninput="saveNastaveni()"></div>
+          <div><label class="cfg-label">Kapacita baterie (kWh)</label><input type="number" id="ns-bat-kwh" class="cfg-input" value="60" oninput="saveNastaveni()"></div>
+          <div><label class="cfg-label">Min. SOC rezerva (%)</label><input type="number" id="ns-min-soc" class="cfg-input" value="0" min="0" max="90" oninput="saveNastaveni()"></div>
+          <div><label class="cfg-label">Max. Grid Setpoint (W)</label><input type="number" id="ns-max-setpoint" class="cfg-input" value="7000" step="500" oninput="saveNastaveni()"></div>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:16px;">
+        <div class="card-label" style="margin-bottom:14px;">🔧 Victron VRM</div>
+        <div class="cards-grid g2">
+          <div><label class="cfg-label">Installation ID</label><input type="text" id="ns-vrm-id" class="cfg-input" value="467894" oninput="saveNastaveni()"></div>
+          <div><label class="cfg-label">Typ střídače</label><select id="ns-inverter" class="cfg-select" onchange="saveNastaveni()"><option value="multiplus2" selected>Multiplus II</option><option value="quattro">Quattro</option><option value="easysolar">EasySolar</option></select></div>
+          <div><label class="cfg-label">Počet fází</label><select id="ns-phases" class="cfg-select" onchange="saveNastaveni()"><option value="1">Jednofázový</option><option value="3" selected>Třífázový</option></select></div>
+          <div><label class="cfg-label">Počet MPPT</label><select id="ns-mppt-count" class="cfg-select" onchange="saveNastaveni()"><option value="1">1</option><option value="2">2</option><option value="3" selected>3</option><option value="4">4</option></select></div>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:16px;">
+        <div class="card-label" style="margin-bottom:14px;">🏠 Zařízení</div>
+        <div class="cards-grid g2">
+          <label class="cfg-toggle-row"><span>🚗 EV / Wallbox</span><input type="checkbox" id="ns-has-ev" onchange="saveNastaveni();toggleEvSection()" checked></label>
+          <label class="cfg-toggle-row"><span>🌡️ Tepelné čerpadlo</span><input type="checkbox" id="ns-has-tc" onchange="saveNastaveni()"></label>
+          <label class="cfg-toggle-row"><span>🚿 Bojler</span><input type="checkbox" id="ns-has-boiler" onchange="saveNastaveni()"></label>
+          <label class="cfg-toggle-row"><span>📡 Spot tarif (prodej)</span><input type="checkbox" id="ns-has-spot-sell" onchange="saveNastaveni()" checked></label>
+        </div>
+        <div id="ns-ev-section" style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border);">
+          <div class="cards-grid g2">
+            <div><label class="cfg-label">Značka wallboxu</label><select id="ns-ev-brand" class="cfg-select" onchange="saveNastaveni()"><option value="victron" selected>Victron EVCS</option><option value="easee">Easee</option><option value="abb">ABB Terra</option><option value="wallbox">Wallbox Pulsar</option><option value="other">Jiný</option></select></div>
+            <div><label class="cfg-label">Max. nabíjecí výkon (kW)</label><input type="number" id="ns-ev-max-kw" class="cfg-input" value="22" oninput="saveNastaveni()"></div>
+          </div>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:16px;">
+        <div class="card-label" style="margin-bottom:14px;">🧠 Prahy strategie</div>
+        <div class="cards-grid g2">
+          <div><label class="cfg-label">Nakupovat pod reálnou cenou (Kč/MWh s DPH)</label><input type="number" id="ns-buy-below" class="cfg-input" value="3500" oninput="saveNastaveni()"><div class="cfg-hint">Reálná = spot + distribuce + poplatky + DPH</div></div>
+          <div><label class="cfg-label">Prodávat nad spotovou cenou (Kč/MWh)</label><input type="number" id="ns-sell-above" class="cfg-input" value="2500" oninput="saveNastaveni()"></div>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+        <button onclick="saveNastaveniAll()" style="background:var(--accent);color:var(--bg);border:none;padding:10px 24px;border-radius:10px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.9rem;font-weight:700;min-height:40px;">💾 Uložit vše</button>
+        <button onclick="resetNastaveni()" style="background:transparent;border:1px solid var(--border);color:var(--muted);padding:10px 16px;border-radius:10px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.85rem;min-height:40px;">↺ Výchozí</button>
+        <div id="ns-save-status" style="font-size:.72rem;font-family:'Space Mono',monospace;color:var(--muted);"></div>
+      </div>
+
+      <!-- Rozklad ceny jako informace -->
+      <div class="section-title" style="margin-top:24px;">ℹ️ Informace o tarifu — rozklad nákupní ceny</div>
+      <div class="card" style="margin-bottom:16px;border-color:var(--border);">
+        <div class="card-label" style="margin-bottom:12px;">Aktuální rozklad při spotové ceně <span id="ns-spot-val" style="color:var(--accent);font-family:'Space Mono',monospace;">—</span> Kč/MWh</div>
+        <div id="price-breakdown"><div style="color:var(--muted);font-size:.78rem;">Data se načtou po refreshi.</div></div>
+        <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border);font-size:.72rem;color:var(--muted);line-height:1.8;">
+          Měsíční fixní platby (nezávislé na spotřebě):<br>
+          Jistič 3×25A: <span id="ns-fuse-display" style="color:var(--text);">605 Kč/měsíc</span> bez DPH &nbsp;·&nbsp;
+          Paušál obchodník: <span id="ns-monthly-display" style="color:var(--text);">129 Kč/měsíc</span> bez DPH
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── HISTORIE ── -->
+  <div class="page" id="page-historie">
+    <div class="page-header">
+      <div class="page-title"><div class="page-title-icon" style="background:#4a665015;">🕐</div>Historie cen</div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <input type="date" id="filterDate" onchange="renderHistory()" style="background:var(--bg);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:8px;font-family:'Space Mono',monospace;font-size:.72rem;">
+        <button onclick="clearHistory()" style="background:transparent;border:1px solid var(--red)30;color:var(--red);padding:6px 12px;border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.78rem;font-weight:500;">🗑 Smazat</button>
+      </div>
+    </div>
+    <div class="page-body">
+      <div class="table-scroll">
+        <div id="historyContainer"><div class="empty-state">Zatím žádná data.</div></div>
+      </div>
+      <div class="pagination" id="pagination"></div>
+    </div>
+  </div>
+
+</main>
+
+<!-- Install banner -->
+<div id="installBanner">
+  <p>⚡ Přidat <strong>Energetika</strong> na plochu?</p>
+  <div class="banner-btns">
+    <button class="install-btn" id="installBtn">Přidat</button>
+    <button class="dismiss-btn" onclick="dismissInstall()">Teď ne</button>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+// ── CONFIG ───────────────────────────────────────────────────
+const VRM_TOKEN   = '9bc3c843b6a71206c602a7dafff09cc2369625dde2250626fccfcf6c23b3f1e0';
+const VRM_SITE    = '467894';
+const VRM_BASE    = 'https://vrmapi.victronenergy.com/v2';
+const PRICE_API   = 'https://spotovaelektrina.cz/api/v1/price/get-prices-json-qh';
+const DB_KEY      = 'elektrina_history';
+const PAGE_SIZE   = 20;
+
+const VRM_HEADERS = { 'X-Authorization': `Token ${VRM_TOKEN}`, 'Content-Type': 'application/json' };
+
+// ── STATE ─────────────────────────────────────────────────────
+let priceData = null;
+let fveData   = null;
+let priceChart = null;
+let fveChart   = null;
+let priceChartMode = 'today';
+let historyPage = 1;
+let deferredPrompt = null;
+
+// ── PWA ───────────────────────────────────────────────────────
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault(); deferredPrompt = e;
+  if (!localStorage.getItem('installDismissed'))
+    setTimeout(() => document.getElementById('installBanner').style.display = 'block', 2000);
+});
+document.getElementById('installBtn').addEventListener('click', async () => {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  const { outcome } = await deferredPrompt.userChoice;
+  if (outcome === 'accepted') localStorage.setItem('installDismissed','1');
+  deferredPrompt = null;
+  document.getElementById('installBanner').style.display = 'none';
+});
+function dismissInstall() {
+  document.getElementById('installBanner').style.display = 'none';
+  localStorage.setItem('installDismissed','1');
+}
+
+if ('serviceWorker' in navigator) {
+  const sw = `const C='el-v1';self.addEventListener('install',e=>e.waitUntil(caches.open(C).then(c=>c.addAll(['./','./index.html','./manifest.json']))));self.addEventListener('fetch',e=>{if(e.request.url.includes('victron')||e.request.url.includes('spotovaelektrina'))return;e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request)));});`;
+  navigator.serviceWorker.register(URL.createObjectURL(new Blob([sw],{type:'application/javascript'}))).catch(()=>{});
+}
+
+// ── TABS (legacy compat) ─────────────────────────────────────
+function switchTab(id, btn) { navTo(id, btn); }
+
+// ── REÁLNÉ CENY (D57d + Delta Green) ─────────────────────────
+const VT_HOURS_SET  = new Set([8, 12, 15, 19]);
+const DIST_VT       = 872.95;
+const DIST_NT       = 249.28;
+const DG_BUY        = 350;
+const DG_SELL       = 450;
+const DAN           = 34.24;
+const SYST          = 206.81;
+const INFRA         = 15.75;
+const POZE_KWH      = 598.95;
+const DPH_MULT      = 1.21;
+
+function isVT(hour) { return VT_HOURS_SET.has(hour); }
+
+function realBuyPrice(spotCZK, hour) {
+  const dist = isVT(hour) ? DIST_VT : DIST_NT;
+  return Math.round((spotCZK + dist + DG_BUY + DAN + SYST + INFRA + POZE_KWH) * DPH_MULT);
+}
+
+function realSellPrice(spotCZK) {
+  return Math.round(spotCZK - DG_SELL);
+}
+
+function renderNodeRed() {
+  if (!priceData) return;
+  const today = priceData.hoursToday || [];
+  if (!today.length) return;
+
+  const now = new Date();
+  const hh  = now.getHours();
+  let idx   = curSlotIdx(today); if (idx < 0) idx = today.length - 1;
+  const cur = today[idx];
+  const spot = cur.priceCZK;
+  const buyP  = realBuyPrice(spot, hh);
+  const sellP = realSellPrice(spot);
+  const tariff = isVT(hh) ? 'VT' : 'NT';
+
+  // Karty
+  document.getElementById('nr-buy-price').textContent  = buyP.toLocaleString('cs-CZ');
+  document.getElementById('nr-buy-tariff').textContent = tariff + ' · spot ' + spot + ' Kč/MWh';
+  document.getElementById('nr-sell-price').textContent = sellP.toLocaleString('cs-CZ');
+  document.getElementById('nr-sell-spread').textContent = `spread: ${sellP - spot > 0 ? '+' : ''}${sellP - spot} Kč/MWh`;
+  document.getElementById('nr-sell-spread').style.color = sellP - spot >= 0 ? 'var(--green)' : 'var(--red)';
+
+  // Arbitráž
+  const allBuy  = today.map(s => realBuyPrice(s.priceCZK, s.hour));
+  const allSell = today.map(s => realSellPrice(s.priceCZK));
+  const minBuy  = Math.min(...allBuy);
+  const maxSell = Math.max(...allSell);
+  const arb60   = Math.round((maxSell - minBuy) / 1000 * 60);
+  document.getElementById('nr-arb').textContent = arb60 > 0 ? arb60.toLocaleString('cs-CZ') + ' Kč' : '—';
+  document.getElementById('nr-arb-detail').textContent = `nákup min ${minBuy} → prodej max ${maxSell} Kč/MWh`;
+
+  // Rozklad ceny
+  const dist = isVT(hh) ? DIST_VT : DIST_NT;
+  const baseSum = spot + dist + DG_BUY + DAN + SYST + INFRA + POZE_KWH;
+  const rows = [
+    ['Spot cena',       spot,      'var(--accent)'],
+    [`Distribuce (${tariff})`, dist, 'var(--text)'],
+    ['Delta Green',     DG_BUY,    'var(--text)'],
+    ['Daň z elektřiny', DAN,       'var(--muted)'],
+    ['Syst. služby',    SYST,      'var(--muted)'],
+    ['Infrastruktura',  INFRA,     'var(--muted)'],
+    ['POZE',            POZE_KWH,  'var(--muted)'],
+    ['Mezisoučet',      Math.round(baseSum), 'var(--text)'],
+    ['DPH 21%',         Math.round(baseSum * 0.21), 'var(--muted)'],
+    ['CELKEM',          buyP,      'var(--red)'],
+  ];
+  document.getElementById('price-breakdown').innerHTML = rows.map(([label, val, color]) =>
+    `<div style="display:flex;justify-content:space-between;border-bottom:1px solid #1a223580;padding:2px 0;">
+      <span style="color:var(--muted);">${label}</span>
+      <span style="color:${color};font-weight:${label==='CELKEM'?'700':'400'}">${typeof val === 'number' ? val.toLocaleString('cs-CZ') : val} Kč/MWh</span>
+    </div>`
+  ).join('');
+
+  // Nejlepší okna
+  const buySlots  = [...today].map((s,i) => ({...s, realBuy: realBuyPrice(s.priceCZK, s.hour)}))
+    .sort((a,b) => a.realBuy - b.realBuy).slice(0,5);
+  const sellSlots = [...today].map(s => ({...s, realSell: realSellPrice(s.priceCZK)}))
+    .sort((a,b) => b.realSell - a.realSell).slice(0,5);
+
+  document.getElementById('nr-best-buy').innerHTML = buySlots.map(s =>
+    `<div><span style="font-family:'Space Mono',monospace;color:var(--green)">${slotLabel(s.hour,s.minute)}</span>` +
+    ` — <b>${s.realBuy.toLocaleString('cs-CZ')}</b> Kč/MWh` +
+    ` <span style="color:var(--muted);font-size:0.65rem;">(spot ${s.priceCZK}${s.priceCZK<0?' 🤑':''})</span></div>`
+  ).join('');
+
+  document.getElementById('nr-best-sell').innerHTML = sellSlots.map(s =>
+    `<div><span style="font-family:'Space Mono',monospace;color:var(--red)">${slotLabel(s.hour,s.minute)}</span>` +
+    ` — <b>${s.realSell.toLocaleString('cs-CZ')}</b> Kč/MWh` +
+    ` <span style="color:var(--muted);font-size:0.65rem;">(spot ${s.priceCZK})</span></div>`
+  ).join('');
+
+  // Init API url
+  initApiUrl();
+}
+
+// ── DB ─────────────────────────────────────────────────────────
+function loadDB() { try { return JSON.parse(localStorage.getItem(DB_KEY)||'[]'); } catch { return []; } }
+function saveDB(db) { localStorage.setItem(DB_KEY, JSON.stringify(db)); }
+
+function storeSnapshot(data) {
+  const db = loadDB(); const ts = Date.now();
+  const dateKey = new Date().toLocaleDateString('cs-CZ');
+  const existing = new Set(db.filter(r=>r.dateKey===dateKey).map(r=>`${r.hour}:${r.minute}`));
+  (data.hoursToday||[]).forEach(s => {
+    if (!existing.has(`${s.hour}:${s.minute}`))
+      db.push({ ts, dateKey, hour:s.hour, minute:s.minute, priceCZK:s.priceCZK, priceEur:s.priceEur, level:s.level });
+  });
+  if (data.hoursTomorrow?.length) {
+    const t = new Date(); t.setDate(t.getDate()+1);
+    const tKey = t.toLocaleDateString('cs-CZ');
+    const ex2 = new Set(db.filter(r=>r.dateKey===tKey).map(r=>`${r.hour}:${r.minute}`));
+    (data.hoursTomorrow||[]).forEach(s => {
+      if (!ex2.has(`${s.hour}:${s.minute}`))
+        db.push({ ts, dateKey:tKey, hour:s.hour, minute:s.minute, priceCZK:s.priceCZK, priceEur:s.priceEur, level:s.level });
+    });
+  }
+  saveDB(db.filter(r=>r.ts >= Date.now()-30*86400000));
+}
+
+// ── HELPERS ───────────────────────────────────────────────────
+const pad = n => String(n).padStart(2,'0');
+const slotLabel = (h,m) => `${pad(h)}:${pad(m)}`;
+function levelClass(l) {
+  if (!l) return 'medium';
+  const s = l.toLowerCase();
+  if (s.includes('low')) return 'low';
+  if ((s.includes('very')&&s.includes('high'))||s==='veryhigh') return 'vhigh';
+  if (s.includes('high')) return 'high';
+  return 'medium';
+}
+function levelLabel(l) {
+  const s=(l||'').toLowerCase();
+  if (s.includes('low')) return 'Nízká';
+  if ((s.includes('very')&&s.includes('high'))||s==='veryhigh') return 'Velmi vysoká';
+  if (s.includes('high')) return 'Vysoká';
+  return 'Střední';
+}
+function curSlotIdx(slots) {
+  const n=new Date(), hh=n.getHours(), mm=Math.floor(n.getMinutes()/15)*15;
+  return slots.findIndex(s=>s.hour===hh&&s.minute===mm);
+}
+function minMax(slots) {
+  let mn=slots[0],mx=slots[0];
+  slots.forEach(s=>{ if(s.priceCZK<mn.priceCZK)mn=s; if(s.priceCZK>mx.priceCZK)mx=s; });
+  return {mn,mx};
+}
+function fmtW(w) {
+  if (w === null || w === undefined || isNaN(w)) return '—';
+  const abs = Math.abs(w);
+  if (abs >= 1000) return (w/1000).toFixed(2) + ' kW';
+  return Math.round(w) + ' W';
+}
+function fmtKWh(v) { return v !== null && !isNaN(v) ? Number(v).toFixed(2)+' kWh' : '—'; }
+
+// ── FETCH PRICES ──────────────────────────────────────────────
+async function fetchPrices() {
+  const r = await fetch(PRICE_API);
+  if (!r.ok) throw new Error('Ceny: HTTP '+r.status);
+  return r.json();
+}
+
+// ── FETCH VRM ─────────────────────────────────────────────────
+async function fetchVRM(path) {
+  const r = await fetch(`/.netlify/functions/vrm?path=${encodeURIComponent(path)}`);
+  if (!r.ok) throw new Error('VRM: HTTP '+r.status);
+  return r.json();
+}
+
+// ── REFRESH ALL ───────────────────────────────────────────────
+async function refreshAll() {
+  const btn = document.getElementById('refreshBtn');
+  const icon = document.getElementById('refreshIcon');
+  btn.classList.add('loading');
+  icon.innerHTML = '<span class="spinner"></span>';
+
+  try {
+    // Načti ceny a VRM diagnostiku paralelně (bez forecastu — ten je pomalý)
+    const [prices, diag, overallStats] = await Promise.allSettled([
+      fetchPrices(),
+      fetchVRM(`/installations/${VRM_SITE}/diagnostics?count=1000`),
+      fetchVRM(`/installations/${VRM_SITE}/overallstats?type=kwh`),
+    ]);
+
+    if (prices.status === 'fulfilled') {
+      priceData = prices.value;
+      storeSnapshot(priceData);
+      renderPrices(priceData);
+      renderHistory();
+    }
+
+    if (diag.status === 'fulfilled') {
+      fveData = diag.value;
+      renderFVE(diag.value, overallStats.status==='fulfilled' ? overallStats.value : null);
+    } else {
+      const fp = document.getElementById('fvePower');
+      if (fp) fp.textContent = 'Chyba';
+      console.warn('VRM diag error:', diag.reason);
+    }
+
+    updateRecommendation();
+    renderStrategy();
+    setTimeout(renderOverview, 100);
+    updateStatus(true);
+
+    // Forecast načti asynchronně — nezablokuje hlavní refresh
+    const now = Math.floor(Date.now()/1000);
+    fetchVRM(`/installations/${VRM_SITE}/stats?type=forecast&interval=hours&start=${now - 3600}&end=${now + 48*3600}`)
+      .then(fc => renderForecast(fc))
+      .catch(() => {
+        const fc = document.getElementById('forecastContent');
+        if (fc) fc.innerHTML = '<div class="empty-state">Předpověď dočasně nedostupná.</div>';
+      });
+
+  } catch(e) {
+    updateStatus(false);
+  } finally {
+    btn.classList.remove('loading');
+    icon.textContent = '↻';
+  }
+}
+
+// ── RENDER PRICES ─────────────────────────────────────────────
+function renderPrices(data) {
+  const today = data.hoursToday || [];
+  const tomorrow = data.hoursTomorrow || [];
+  if (!today.length) return;
+
+  let idx = curSlotIdx(today); if (idx<0) idx=today.length-1;
+  const cur = today[idx];
+  const lc = levelClass(cur.level);
+
+  // Main
+  ['currentCZK','fve-currentCZK'].forEach(id => document.getElementById(id).textContent = cur.priceCZK+' Kč');
+  ['currentEUR','fve-currentEUR'].forEach(id => document.getElementById(id).textContent = cur.priceEur.toFixed(2)+' EUR/MWh');
+  document.getElementById('currentTime').textContent = slotLabel(cur.hour,cur.minute);
+  ['currentLevel','fve-currentLevel'].forEach(id => {
+    const el = document.getElementById(id);
+    el.textContent = levelLabel(cur.level);
+    el.className = `level-badge badge-${lc}`;
+  });
+
+  // Min/Max
+  const {mn,mx} = minMax(today);
+  document.getElementById('minCZK').textContent = mn.priceCZK+' Kč';
+  document.getElementById('minEUR').textContent = mn.priceEur.toFixed(2)+' EUR/MWh';
+  document.getElementById('minTime').textContent = '⏰ '+slotLabel(mn.hour,mn.minute);
+  document.getElementById('maxCZK').textContent = mx.priceCZK+' Kč';
+  document.getElementById('maxEUR').textContent = mx.priceEur.toFixed(2)+' EUR/MWh';
+  document.getElementById('maxTime').textContent = '⏰ '+slotLabel(mx.hour,mx.minute);
+
+  // Next 4
+  const next4 = [];
+  for (let i=1;i<=4;i++) { if(idx+i<today.length) next4.push({slot:today[idx+i],isT:false}); }
+  if (next4.length<4 && tomorrow.length) {
+    let ti=0; while(next4.length<4&&ti<tomorrow.length) next4.push({slot:tomorrow[ti++],isT:true});
+  }
+  document.getElementById('nextSlots').innerHTML = next4.map(({slot,isT})=>{
+    const lc2=levelClass(slot.level);
+    return `<div class="slot-card">
+      <div class="slot-time">${slotLabel(slot.hour,slot.minute)}${isT?' <span style="font-size:0.58rem;color:var(--accent)">zítra</span>':''}</div>
+      <div class="slot-price lvl-${lc2}">${slot.priceCZK} Kč</div>
+      <div class="slot-eur">${slot.priceEur.toFixed(2)} EUR</div>
+    </div>`;
+  }).join('');
+
+  // Tomorrow
+  if (tomorrow.length) {
+    document.getElementById('tomorrowSection').style.display='block';
+    document.getElementById('tomorrowTab').style.opacity='1';
+    const {mn:tMn,mx:tMx}=minMax(tomorrow);
+    document.getElementById('tMinCZK').textContent=tMn.priceCZK+' Kč';
+    document.getElementById('tMinEUR').textContent=tMn.priceEur.toFixed(2)+' EUR/MWh';
+    document.getElementById('tMinTime').textContent='⏰ '+slotLabel(tMn.hour,tMn.minute);
+    document.getElementById('tMaxCZK').textContent=tMx.priceCZK+' Kč';
+    document.getElementById('tMaxEUR').textContent=tMx.priceEur.toFixed(2)+' EUR/MWh';
+    document.getElementById('tMaxTime').textContent='⏰ '+slotLabel(tMx.hour,tMx.minute);
+  } else {
+    document.getElementById('tomorrowTab').style.opacity='0.4';
+  }
+
+  renderPriceChart(priceChartMode);
+  // Update overview after prices are rendered
+  setTimeout(renderOverview, 50);
+}
+
+// ── RENDER FVE ────────────────────────────────────────────────
+function renderFVE(diagResp, overallResp) {
+  const records = diagResp?.records || [];
+  const getAll  = code => records.filter(r => r.code === code);
+  const getVal  = (code, fallback=null) => { const r=records.find(r=>r.code===code); return r ? r.rawValue : fallback; };
+
+  // ── FVE výroba — součet všech MPPT přes PVP (přesnější než Pdc)
+  const pvpAll = getAll('PVP');
+  const solarW = pvpAll.length > 0
+    ? pvpAll.reduce((s, r) => s + (r.rawValue || 0), 0)
+    : (getVal('Pdc') ?? 0);
+
+  // Yield today — součet YT ze všech MPPT
+  const ytAll   = getAll('YT');
+  const yieldTodayKwh = ytAll.length > 0
+    ? ytAll.reduce((s, r) => s + (r.rawValue || 0), 0)
+    : null;
+
+  // ── Spotřeba — o1+o2+o3 (AC Consumption on Output) ze System overview
+  const o1 = getVal('o1') ?? 0;
+  const o2 = getVal('o2') ?? 0;
+  const o3 = getVal('o3') ?? 0;
+  const loadW = o1 + o2 + o3;
+
+  // ── Síť — g1+g2+g3 ze System overview (záporné = prodej do sítě)
+  const g1 = getVal('g1') ?? 0;
+  const g2 = getVal('g2') ?? 0;
+  const g3 = getVal('g3') ?? 0;
+  const gridW = g1 + g2 + g3;
+
+  // ── Baterie
+  const batSOC = getVal('bs') ?? getVal('SOC');
+  const batW   = getVal('bp') ?? 0;   // Battery Power ze System overview
+
+  // ── EV nabíječka
+  const evW     = getVal('evp') ?? 0;
+  const evState = records.find(r => r.code === 'eve')?.formattedValue ?? null;
+  const evSessKwh = getVal('evsE') ?? null;
+
+  // ── Display FVE
+  document.getElementById('fvePower').textContent = fmtW(solarW);
+  document.getElementById('fvePowerSub').textContent = solarW >= 1000 ? Math.round(solarW) + ' W celkem' : '';
+  if (yieldTodayKwh !== null)
+    document.getElementById('fveTodayYield').textContent = 'Dnes: ' + fmtKWh(yieldTodayKwh);
+
+  // ── Display spotřeba (bez EV nebo s EV)
+  document.getElementById('loadPower').textContent = fmtW(loadW);
+  document.getElementById('loadSub').textContent = evW > 0 ? `vč. EV ${fmtW(evW)}` : 'W spotřeba';
+
+  // ── Display síť
+  const gridAbs = Math.abs(gridW);
+  document.getElementById('gridPower').textContent = fmtW(gridAbs);
+  const fromGrid = gridW > 50;
+  const toGrid   = gridW < -50;
+  document.getElementById('gridSub').textContent      = fromGrid ? 'Odběr ze sítě' : toGrid ? 'Přebytek do sítě' : 'W';
+  document.getElementById('gridDirection').textContent = fromGrid ? '← Ze sítě' : toGrid ? '→ Do sítě' : 'Vyrovnáno';
+  document.getElementById('gridPower').style.color     = fromGrid ? 'var(--red)' : toGrid ? 'var(--green)' : 'var(--accent)';
+
+  // ── Display baterie
+  if (batSOC !== null) {
+    document.getElementById('batSOC').textContent = Math.round(batSOC) + '%';
+    const bar = document.getElementById('batBar');
+    bar.style.width      = batSOC + '%';
+    bar.style.background = batSOC > 60 ? 'var(--green)' : batSOC > 30 ? 'var(--yellow)' : 'var(--red)';
+    const charging    = batW > 50;
+    const discharging = batW < -50;
+    document.getElementById('batPower').textContent = fmtW(Math.abs(batW)) + (charging ? ' ↑ nabíjení' : discharging ? ' ↓ vybíjení' : '');
+    document.getElementById('batState').textContent = charging ? '🟢 Nabíjí se' : discharging ? '🔴 Vybíjí se' : '⚪ Standby';
+  }
+
+  // ── EV karta (pokud existuje v DOM)
+  const evCard = document.getElementById('ev-power');
+  if (evCard) {
+    evCard.textContent = fmtW(evW);
+    const evStatus = document.getElementById('ev-status');
+    if (evStatus) evStatus.textContent = evState ?? '—';
+    const evSession = document.getElementById('ev-session');
+    if (evSession && evSessKwh !== null)
+      evSession.textContent = 'Session: ' + fmtKWh(evSessKwh);
+  }
+
+  // ── Animovaný tok energie
+  updateFlowDiagram(solarW, gridW, loadW, batW, evW);
+
+  // ── Overall stats z overallResp
+  if (overallResp?.records) {
+    const rec = overallResp.records;
+    const yieldKwh   = rec.Kwh_System_Solar_Yield_kwh ?? rec['Kwh_System_Solar_Yield'] ?? null;
+    const consumeKwh = rec.Kwh_System_User_Consumption_kwh ?? null;
+    const gridInKwh  = rec.Kwh_System_Grid_To_User_kwh ?? null;
+    const gridOutKwh = rec.Kwh_System_User_To_Grid_kwh ?? null;
+
+    if (yieldKwh   !== null) { document.getElementById('todayYield').textContent   = fmtKWh(yieldKwh); document.getElementById('fveTodayYield').textContent = 'Dnes: ' + fmtKWh(yieldKwh); }
+    if (consumeKwh !== null)   document.getElementById('todayConsume').textContent = 'Spotřeba: ' + fmtKWh(consumeKwh);
+    if (gridInKwh  !== null)   document.getElementById('todayGrid').textContent    = 'Ze sítě: '  + fmtKWh(gridInKwh);
+    if (gridOutKwh !== null)   document.getElementById('todayFeed').textContent    = 'Do sítě: '  + fmtKWh(gridOutKwh);
+  } else if (yieldTodayKwh !== null) {
+    document.getElementById('todayYield').textContent = fmtKWh(yieldTodayKwh);
+    document.getElementById('fveTodayYield').textContent = 'Dnes: ' + fmtKWh(yieldTodayKwh);
+  }
+  // Update overview after FVE data
+  setTimeout(renderOverview, 50);
+}
+
+// ── FORECAST ─────────────────────────────────────────────────
+function renderForecast(data) {
+  const fc = document.getElementById('forecastContent');
+  const badge = document.getElementById('forecastBadge');
+
+  // Try to find forecast data in the response
+  const records = data?.records;
+  if (!records) { fc.innerHTML = '<div class="empty-state">Předpověď není k dispozici.</div>'; return; }
+
+  // records can be object with attribute arrays
+  // Look for solar forecast key
+  let forecastArr = null;
+  const keys = Object.keys(records);
+  // find key with forecast/solar data
+  for (const k of keys) {
+    if (Array.isArray(records[k]) && records[k].length > 0) {
+      forecastArr = records[k]; break;
+    }
+  }
+
+  if (!forecastArr || forecastArr.length === 0) {
+    fc.innerHTML = '<div class="empty-state">Předpověď výroby není momentálně dostupná z Victron VRM.</div>';
+    return;
+  }
+
+  badge.style.display = 'inline-block';
+  const max = Math.max(...forecastArr.map(f=>f.Value||f.value||0));
+  if (max === 0) { fc.innerHTML = '<div class="empty-state">Předpověď: 0 W (noc nebo oblačno).</div>'; return; }
+
+  // Show bar chart
+  const bars = forecastArr.slice(0, 24).map(f => {
+    const val = f.Value ?? f.value ?? 0;
+    const ts = f.timestamp ? new Date(f.timestamp*1000) : null;
+    const label = ts ? `${pad(ts.getHours())}h` : '';
+    const h = max > 0 ? Math.round((val/max)*56) : 0;
+    return `<div class="forecast-bar-wrap">
+      <div class="forecast-bar" style="height:${h}px" title="${Math.round(val)} W"></div>
+      <div class="forecast-bar-label">${label}</div>
+    </div>`;
+  }).join('');
+
+  const totalKwh = forecastArr.reduce((a,f)=>(a+(f.Value??f.value??0)/1000),0).toFixed(1);
+  fc.innerHTML = `
+    <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+      <span style="font-size:0.7rem;color:var(--muted)">Předpověď výroby — ${forecastArr.length} hodin</span>
+      <span style="font-family:'Space Mono',monospace;font-size:0.75rem;color:var(--yellow)">~${totalKwh} kWh celkem</span>
+    </div>
+    <div class="forecast-bars">${bars}</div>`;
+}
+
+// ── RECOMMENDATION ────────────────────────────────────────────
+function updateRecommendation() {
+  const el = document.getElementById('recommendation');
+  if (!priceData) { el.textContent = 'Čekám na data...'; return; }
+
+  const today = priceData.hoursToday || [];
+  let idx = curSlotIdx(today); if(idx<0) idx=today.length-1;
+  const cur = today[idx];
+  const lc = levelClass(cur.level);
+
+  // Get battery SOC if available
+  const records = fveData?.records || [];
+  const batSOC = records.find(r=>r.code==='SOC')?.rawValue ?? null;
+  const solarW = records.find(r=>r.code==='Pdc')?.rawValue ?? records.find(r=>r.code==='PPV')?.rawValue ?? 0;
+
+  let tips = [];
+
+  if (solarW > 500) tips.push('☀️ FVE vyrábí — využij solární energii');
+  if (lc === 'low') tips.push('💚 Nízká cena — vhodné pro spotřebiče');
+  if (lc === 'vhigh' || lc === 'high') tips.push('🔴 Vysoká cena — omez spotřebu ze sítě');
+  if (batSOC !== null && batSOC < 20 && lc === 'low') tips.push('🔋 Baterie nízká + levná elektřina — dobij ze sítě');
+  if (batSOC !== null && batSOC > 80 && solarW > 200) tips.push('🔋 Baterie plná — přebytek jde do sítě');
+  if (!tips.length) tips.push('ℹ️ Vše v normálu');
+
+  el.innerHTML = tips.map(t=>`<div style="margin-bottom:4px;">${t}</div>`).join('');
+}
+
+// ── PRICE CHART ───────────────────────────────────────────────
+function switchPriceChart(mode, btn) {
+  priceChartMode = mode;
+  document.querySelectorAll('.chart-tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  renderPriceChart(mode);
+}
+
+function renderPriceChart(mode) {
+  if (!priceData) return;
+  const slots = mode==='tomorrow' ? (priceData.hoursTomorrow||[]) : (priceData.hoursToday||[]);
+  if (!slots.length) return;
+
+  const labels = slots.map(s=>s.minute===0?slotLabel(s.hour,s.minute):'');
+  const prices = slots.map(s=>s.priceCZK);
+  const curIdx = mode==='today' ? curSlotIdx(slots) : -1;
+  const bgColors = slots.map((s,i)=>{
+    if(i===curIdx) return 'rgba(0,212,255,1)';
+    const lc=levelClass(s.level);
+    return {low:'rgba(0,230,118,0.7)',medium:'rgba(255,214,0,0.7)',high:'rgba(255,107,53,0.7)',vhigh:'rgba(255,23,68,0.7)'}[lc];
+  });
+
+  const ctx = document.getElementById('priceChart').getContext('2d');
+  if (priceChart) priceChart.destroy();
+  priceChart = new Chart(ctx, {
+    type:'bar', data:{ labels, datasets:[{ data:prices, backgroundColor:bgColors, borderRadius:3, borderSkipped:false }] },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          callbacks:{
+            title:items=>slotLabel(slots[items[0].dataIndex].hour,slots[items[0].dataIndex].minute),
+            label:item=>{const s=slots[item.dataIndex];return[` ${s.priceCZK} Kč/MWh`,` ${s.priceEur.toFixed(2)} EUR`,` ${levelLabel(s.level)}`];}
+          },
+          backgroundColor:'#1a2235',titleColor:'#e8f0fe',bodyColor:'#5c7a99',borderColor:'#1e2d45',borderWidth:1
+        }
+      },
+      scales:{
+        x:{grid:{color:'rgba(30,45,69,0.8)'},ticks:{color:'#5c7a99',font:{family:'Space Mono',size:9}}},
+        y:{grid:{color:'rgba(30,45,69,0.8)'},ticks:{color:'#5c7a99',font:{family:'Space Mono',size:9},callback:v=>v+' Kč'}}
+      }
+    }
+  });
+}
+
+// ── HISTORY ───────────────────────────────────────────────────
+function renderHistory() {
+  const db = loadDB();
+  const fDate = document.getElementById('filterDate').value;
+  let filtered = [...db].sort((a,b)=>{ if(a.dateKey!==b.dateKey)return b.ts-a.ts; if(a.hour!==b.hour)return b.hour-a.hour; return b.minute-a.minute; });
+  if (fDate) {
+    const [y,m,d]=fDate.split('-');
+    const cz=`${parseInt(d)}. ${parseInt(m)}. ${y}`;
+    filtered=filtered.filter(r=>r.dateKey===cz);
+  }
+  const cont=document.getElementById('historyContainer'), pag=document.getElementById('pagination');
+  if(!filtered.length){cont.innerHTML='<div class="empty-state">Žádná data pro zvolené datum.</div>';pag.innerHTML='';return;}
+  const gMax=Math.max(...filtered.map(r=>r.priceCZK));
+  const total=Math.ceil(filtered.length/PAGE_SIZE);
+  if(historyPage>total)historyPage=1;
+  const page=filtered.slice((historyPage-1)*PAGE_SIZE,historyPage*PAGE_SIZE);
+  const colors={low:'var(--green)',medium:'var(--yellow)',high:'var(--orange)',vhigh:'var(--red)'};
+  let html=`<table class="history-table"><thead><tr><th>Datum</th><th>Čas</th><th>CZK/MWh</th><th>EUR/MWh</th><th>Hladina</th><th>Bar</th></tr></thead><tbody>`;
+  page.forEach(r=>{
+    const lc=levelClass(r.level);
+    const bw=Math.round((r.priceCZK/gMax)*100);
+    html+=`<tr><td class="td-time">${r.dateKey}</td><td class="td-time">${slotLabel(r.hour,r.minute)}</td><td class="td-czk lvl-${lc}">${r.priceCZK}</td><td class="td-time">${r.priceEur?.toFixed(2)||'—'}</td><td><span class="level-badge badge-${lc}" style="font-size:0.6rem;padding:2px 6px;">${levelLabel(r.level)}</span></td><td style="width:80px"><div class="bar-mini" style="width:${bw}%;background:${colors[lc]}"></div></td></tr>`;
+  });
+  html+='</tbody></table>';
+  cont.innerHTML=html;
+  let p=`<button class="page-btn" onclick="goPage(${historyPage-1})" ${historyPage<=1?'disabled':''}>‹</button>`;
+  for(let i=Math.max(1,historyPage-2);i<=Math.min(total,historyPage+2);i++)
+    p+=`<button class="page-btn ${i===historyPage?'active':''}" onclick="goPage(${i})">${i}</button>`;
+  p+=`<button class="page-btn" onclick="goPage(${historyPage+1})" ${historyPage>=total?'disabled':''}>›</button>`;
+  p+=`<span class="page-info">${filtered.length} zázn.</span>`;
+  pag.innerHTML=p;
+}
+
+function goPage(p){historyPage=p;renderHistory();}
+function clearHistory(){if(confirm('Smazat celou historii cen?')){localStorage.removeItem(DB_KEY);renderHistory();}}
+
+// ── STRATEGY ENGINE ───────────────────────────────────────────
+const CFG_KEY = 'elektrina_config';
+
+function loadConfig() {
+  try { return JSON.parse(localStorage.getItem(CFG_KEY)||'{}'); } catch { return {}; }
+}
+function saveConfig() {
+  const cfg = {
+    buyBelow:  parseFloat(document.getElementById('cfg-buy')?.value  || 1000),
+    sellAbove: parseFloat(document.getElementById('cfg-sell')?.value || 2500),
+    minSOC:    parseFloat(document.getElementById('cfg-soc')?.value  || 0),
+    batKwh:    parseFloat(document.getElementById('cfg-bat')?.value  || 60),
+  };
+  localStorage.setItem(CFG_KEY, JSON.stringify(cfg));
+  return cfg;
+}
+function applyConfig() {
+  const cfg = loadConfig();
+  if (document.getElementById('cfg-buy'))  document.getElementById('cfg-buy').value  = cfg.buyBelow  ?? 1000;
+  if (document.getElementById('cfg-sell')) document.getElementById('cfg-sell').value = cfg.sellAbove ?? 2500;
+  if (document.getElementById('cfg-soc'))  document.getElementById('cfg-soc').value  = cfg.minSOC    ?? 0;
+  if (document.getElementById('cfg-bat'))  document.getElementById('cfg-bat').value  = cfg.batKwh    ?? 60;
+}
+
+// Decide mode for a single slot
+function decideSlot(price, soc, solarW, cfg) {
+  const batOk = soc > cfg.minSOC;
+  const hasSolar = solarW > 200;
+
+  if (price < 0)                        return { mode:'SUPERNAKUP',  color:'#00e676', icon:'🤑', short:'Záporná cena!' };
+  if (price <= cfg.buyBelow && batOk)   return { mode:'NAKUP',       color:'#00e676', icon:'🟢', short:'Nakupuj ze sítě' };
+  if (price >= cfg.sellAbove && batOk)  return { mode:'PRODEJ',      color:'#ff1744', icon:'🔴', short:'Prodávej do sítě' };
+  if (hasSolar && soc < 95)             return { mode:'SOLÁR',       color:'#ffd600', icon:'☀️', short:'Nabíjej ze solárů' };
+  if (hasSolar && soc >= 95)            return { mode:'PŘEBYTEK',    color:'#ff6b35', icon:'⚡', short:'Přebytek FVE' };
+  return                                       { mode:'STANDBY',     color:'#5c7a99', icon:'⚪', short:'Vlastní spotřeba' };
+}
+
+let strategyChart = null;
+
+function renderStrategy() {
+  if (!priceData) return;
+  const cfg = {
+    buyBelow:  parseFloat(document.getElementById('cfg-buy')?.value  ?? 1000),
+    sellAbove: parseFloat(document.getElementById('cfg-sell')?.value ?? 2500),
+    minSOC:    parseFloat(document.getElementById('cfg-soc')?.value  ?? 0),
+    batKwh:    parseFloat(document.getElementById('cfg-bat')?.value  ?? 60),
+  };
+
+  const today    = priceData.hoursToday    || [];
+  const tomorrow = priceData.hoursTomorrow || [];
+
+  // Get current VRM values
+  const records = fveData?.records || [];
+  const soc     = records.find(r=>r.code==='SOC')?.rawValue ?? 80;
+  const solarW  = records.find(r=>r.code==='Pdc')?.rawValue ?? records.find(r=>r.code==='PPV')?.rawValue ?? 0;
+
+  if (!today.length) return;
+
+  // Current slot decision
+  let idx = curSlotIdx(today); if(idx<0) idx=today.length-1;
+  const cur = today[idx];
+  const allPrices = today.map(s=>s.priceCZK);
+  const minP = Math.min(...allPrices), maxP = Math.max(...allPrices);
+  const percentile = Math.round(((cur.priceCZK - minP)/(maxP - minP||1))*100);
+  const decision = decideSlot(cur.priceCZK, soc, solarW, cfg);
+
+  // Update decision card
+  const card = document.getElementById('decisionCard');
+  card.style.setProperty('--card-color', decision.color);
+  document.getElementById('decisionMode').innerHTML = `${decision.icon} ${decision.mode}`;
+  document.getElementById('decisionMode').style.color = decision.color;
+
+  // Detailed reason
+  let reason = '';
+  if (decision.mode === 'SUPERNAKUP') reason = `Záporná cena ${cur.priceCZK} Kč/MWh — nabíjej baterii i EV na maximum, spouštěj všechny spotřebiče!`;
+  else if (decision.mode === 'NAKUP') reason = `Cena ${cur.priceCZK} Kč/MWh je pod tvým prahem ${cfg.buyBelow} Kč. Nabíjej baterii (${soc.toFixed(0)}% → 100%) a EV.`;
+  else if (decision.mode === 'PRODEJ') reason = `Cena ${cur.priceCZK} Kč/MWh je nad prahem ${cfg.sellAbove} Kč. Baterie ${soc.toFixed(0)}% — prodávej do sítě přes Grid setpoint.`;
+  else if (decision.mode === 'SOLÁR') reason = `FVE vyrábí ${fmtW(solarW)}. Baterie na ${soc.toFixed(0)}% — nabíjej ze solárů, minimalizuj odběr ze sítě.`;
+  else if (decision.mode === 'PŘEBYTEK') reason = `Baterie plná (${soc.toFixed(0)}%), FVE vyrábí ${fmtW(solarW)} — přebytek posílej do sítě nebo nabíjej EV.`;
+  else reason = `Cena ${cur.priceCZK} Kč/MWh — mimo prahy nákupu/prodeje. Čerpej z baterie/solárů, šetři.`;
+  document.getElementById('decisionReason').textContent = reason;
+
+  // Action hint
+  let action = '';
+  if (decision.mode === 'PRODEJ' || decision.mode === 'SUPERNAKUP') {
+    const sp = decision.mode === 'PRODEJ' ? -3000 : 5000;
+    action = `→ Nastav Grid setpoint: ${sp > 0 ? '+'+sp : sp} W`;
+  } else if (decision.mode === 'NAKUP') {
+    action = `→ Nastav Grid setpoint: +3000 W až +5000 W`;
+  } else {
+    action = `→ Nastav Grid setpoint: 0 W (standby)`;
+  }
+  document.getElementById('decisionAction').textContent = action;
+  document.getElementById('decisionAction').style.color = decision.color;
+
+  // Key metrics
+  document.getElementById('s-price').textContent = cur.priceCZK < 0 ? cur.priceCZK : cur.priceCZK;
+  document.getElementById('s-price').style.color = cur.priceCZK < 0 ? 'var(--green)' : cur.priceCZK > cfg.sellAbove ? 'var(--red)' : cur.priceCZK < cfg.buyBelow ? 'var(--green)' : 'var(--accent)';
+  document.getElementById('s-soc').textContent = soc.toFixed(0) + '%';
+  document.getElementById('s-soc-kwh').textContent = (soc/100 * cfg.batKwh).toFixed(1) + ' kWh';
+  document.getElementById('s-solar').textContent = fmtW(solarW);
+  document.getElementById('s-position').textContent = percentile + '%';
+  document.getElementById('s-position-sub').textContent = percentile < 25 ? '🟢 levná čtvrtina' : percentile > 75 ? '🔴 drahá čtvrtina' : '⚪ střed';
+
+  // Best buy/sell windows today
+  const sorted = [...today].sort((a,b)=>a.priceCZK-b.priceCZK);
+  const buy5  = sorted.slice(0,5).sort((a,b)=>a.hour*60+a.minute - (b.hour*60+b.minute));
+  const sell5 = sorted.slice(-5).sort((a,b)=>a.hour*60+a.minute - (b.hour*60+b.minute));
+
+  document.getElementById('bestBuySlots').innerHTML = buy5.map(s=>
+    `<div><span style="font-family:'Space Mono',monospace;color:var(--green)">${slotLabel(s.hour,s.minute)}</span> — <b>${s.priceCZK}</b> Kč/MWh${s.priceCZK<0?' 🤑':''}</div>`
+  ).join('');
+  document.getElementById('bestSellSlots').innerHTML = sell5.map(s=>
+    `<div><span style="font-family:'Space Mono',monospace;color:var(--red)">${slotLabel(s.hour,s.minute)}</span> — <b>${s.priceCZK}</b> Kč/MWh</div>`
+  ).join('');
+
+  // Tomorrow windows
+  if (tomorrow.length) {
+    document.getElementById('tomorrowStrategy').style.display = 'block';
+    const tsorted = [...tomorrow].sort((a,b)=>a.priceCZK-b.priceCZK);
+    const tbuy5  = tsorted.slice(0,5).sort((a,b)=>a.hour*60+a.minute-(b.hour*60+b.minute));
+    const tsell5 = tsorted.slice(-5).sort((a,b)=>a.hour*60+a.minute-(b.hour*60+b.minute));
+    document.getElementById('tmrBuySlots').innerHTML = tbuy5.map(s=>
+      `<div><span style="font-family:'Space Mono',monospace;color:var(--green)">${slotLabel(s.hour,s.minute)}</span> — <b>${s.priceCZK}</b> Kč/MWh${s.priceCZK<0?' 🤑':''}</div>`
+    ).join('');
+    document.getElementById('tmrSellSlots').innerHTML = tsell5.map(s=>
+      `<div><span style="font-family:'Space Mono',monospace;color:var(--red)">${slotLabel(s.hour,s.minute)}</span> — <b>${s.priceCZK}</b> Kč/MWh</div>`
+    ).join('');
+  }
+
+  // Arbitrage stats — enhanced with detail calculation
+  const minBuy   = Math.min(...allPrices);
+  const maxSell  = Math.max(...allPrices);
+  const minSlot  = today.find(s => s.priceCZK === minBuy);
+  const maxSlot  = today.find(s => s.priceCZK === maxSell);
+  const arbKwh   = parseFloat(document.getElementById('arb-slider')?.value ?? cfg.batKwh);
+
+  document.getElementById('arb-buy').textContent       = minBuy + ' Kč/MWh';
+  document.getElementById('arb-buy-time').textContent  = minSlot ? '⏰ ' + slotLabel(minSlot.hour, minSlot.minute) : '';
+  document.getElementById('arb-sell').textContent      = maxSell + ' Kč/MWh';
+  document.getElementById('arb-sell-time').textContent = maxSlot ? '⏰ ' + slotLabel(maxSlot.hour, maxSlot.minute) : '';
+  document.getElementById('arb-buy').style.color       = minBuy < 0 ? 'var(--green)' : 'var(--green)';
+  document.getElementById('arb-sell').style.color      = 'var(--red)';
+
+  const buyCost   = (minBuy / 1000) * arbKwh;       // Kč zaplaceno za nákup
+  const sellRev   = (maxSell / 1000) * arbKwh;      // Kč přijato za prodej
+  const profit    = sellRev - buyCost;
+  document.getElementById('arb-spread').textContent    = Math.round(profit) + ' Kč';
+  document.getElementById('arb-spread').style.color    = profit > 0 ? 'var(--yellow)' : 'var(--muted)';
+  document.getElementById('arb-kwh').textContent       = `při ${arbKwh} kWh`;
+
+  // Detail výpočtu
+  document.getElementById('arb-detail').innerHTML =
+    `Nákup: ${arbKwh} kWh × ${minBuy} Kč/MWh = <span style="color:var(--red)">${buyCost.toFixed(2)} Kč</span><br>` +
+    `Prodej: ${arbKwh} kWh × ${maxSell} Kč/MWh = <span style="color:var(--green)">${sellRev.toFixed(2)} Kč</span><br>` +
+    `Zisk: <span style="color:var(--yellow);font-weight:700">${Math.round(profit)} Kč</span>` +
+    (minBuy < 0 ? ` &nbsp;🤑 záporná cena nákupu = platí ti za odběr!` : '');
+
+  // Draw chart for given slots array
+  renderStrategyChartFor(today, idx, soc, solarW, cfg);
+
+  // Update tomorrow tab visibility
+  const tmrTab = document.getElementById('strat-tab-tomorrow');
+  if (tmrTab) tmrTab.style.opacity = tomorrow.length ? '1' : '0.4';
+}
+
+// Store last known values for chart switching
+let _stratSoc = 80, _stratSolar = 0, _stratCfg = {};
+let strategyChartMode = 'today';
+
+function switchStrategyChart(mode, btn) {
+  strategyChartMode = mode;
+  document.querySelectorAll('#strat-tab-today, #strat-tab-tomorrow').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  if (!priceData) return;
+  const slots = mode === 'tomorrow' ? (priceData.hoursTomorrow || []) : (priceData.hoursToday || []);
+  if (!slots.length) return;
+  const records = fveData?.records || [];
+  const soc   = records.find(r=>r.code==='SOC')?.rawValue ?? 80;
+  const solar = records.find(r=>r.code==='Pdc')?.rawValue ?? 0;
+  const cfg   = { buyBelow: parseFloat(document.getElementById('cfg-buy')?.value??1000), sellAbove: parseFloat(document.getElementById('cfg-sell')?.value??2500), minSOC: 0, batKwh: 60 };
+  const curIdx = mode === 'today' ? curSlotIdx(slots) : -1;
+  renderStrategyChartFor(slots, curIdx, soc, solar, cfg);
+}
+
+function renderStrategyChartFor(slots, curIdx, soc, solarW, cfg) {
+  const labels = slots.map(s => s.minute===0 ? slotLabel(s.hour,s.minute) : '');
+  const prices = slots.map(s => s.priceCZK);
+  const ctx = document.getElementById('strategyChart').getContext('2d');
+  if (strategyChart) strategyChart.destroy();
+  strategyChart = new Chart(ctx, {
+    type: 'bar',
+    data: { labels, datasets: [{ data: prices,
+      backgroundColor: slots.map((s,i) => {
+        if (i === curIdx) return '#ffffffdd';
+        const d = decideSlot(s.priceCZK, soc, solarW, cfg);
+        return d.color + 'bb';
+      }),
+      borderRadius: 3, borderSkipped: false,
+    }]},
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            title: items => { const s=slots[items[0].dataIndex]; return slotLabel(s.hour,s.minute); },
+            label: item  => { const s=slots[item.dataIndex]; const d=decideSlot(s.priceCZK,soc,solarW,cfg); return [` ${s.priceCZK} Kč/MWh`,` ${d.icon} ${d.mode}`]; }
+          },
+          backgroundColor:'#1a2235', titleColor:'#e8f0fe', bodyColor:'#5c7a99', borderColor:'#1e2d45', borderWidth:1,
+        }
+      },
+      scales: {
+        x: { grid:{color:'rgba(30,45,69,0.5)'}, ticks:{color:'#5c7a99',font:{family:'Space Mono',size:9}} },
+        y: { grid:{color:'rgba(30,45,69,0.5)'}, ticks:{color:'#5c7a99',font:{family:'Space Mono',size:9},callback:v=>v+' Kč'} }
+      }
+    }
+  });
+}
+
+function updateArbSlider() {
+  const v = document.getElementById('arb-slider').value;
+  document.getElementById('arb-slider-val').textContent = v + ' kWh';
+  renderStrategy();
+}
+
+// ── PRAVIDLA NODE-RED ─────────────────────────────────────────
+const RULES_KEY = 'elektrina_rules';
+
+function loadRules() {
+  try { return JSON.parse(localStorage.getItem(RULES_KEY) || '{}'); } catch { return {}; }
+}
+
+function saveRules() {
+  const r = {
+    sellAbove:    parseFloat(document.getElementById('rule-sell-above')?.value ?? 2500),
+    sellSetpoint: parseInt(document.getElementById('rule-sell-setpoint')?.value ?? -5000),
+    minSell:      parseFloat(document.getElementById('rule-min-sell')?.value ?? 500),
+    buyBelow:     parseFloat(document.getElementById('rule-buy-below')?.value ?? 3500),
+    buySOC:       parseInt(document.getElementById('rule-buy-soc')?.value ?? 100),
+    buySetpoint:  parseInt(document.getElementById('rule-buy-setpoint')?.value ?? 5000),
+    blockExport:  parseFloat(document.getElementById('rule-block-export')?.value ?? 1000),
+  };
+  localStorage.setItem(RULES_KEY, JSON.stringify(r));
+  return r;
+}
+
+function saveRulesAll() {
+  saveRules();
+  const el = document.getElementById('rules-save-status');
+  if(el){ el.textContent = '✅ Uloženo · ' + new Date().toLocaleTimeString('cs-CZ'); el.style.color='var(--accent)'; }
+  setTimeout(() => { if(el) el.textContent=''; }, 3000);
+  updateRuleStatus();
+}
+
+function applyRulesUI() {
+  const r = loadRules();
+  const set = (id, v) => { const el=document.getElementById(id); if(el && v!==undefined) el.value=v; };
+  set('rule-sell-above',    r.sellAbove    ?? 2500);
+  set('rule-sell-setpoint', r.sellSetpoint ?? -5000);
+  set('rule-min-sell',      r.minSell      ?? 500);
+  set('rule-buy-below',     r.buyBelow     ?? 3500);
+  set('rule-buy-soc',       r.buySOC       ?? 100);
+  set('rule-buy-setpoint',  r.buySetpoint  ?? 5000);
+  set('rule-block-export',  r.blockExport  ?? 1000);
+  // Update display values
+  const sp = r.sellSetpoint ?? -5000;
+  const bsp = r.buySetpoint ?? 5000;
+  const bsoc = r.buySOC ?? 100;
+  const sv = document.getElementById('rule-sell-setpoint-val');
+  const bv = document.getElementById('rule-buy-setpoint-val');
+  const bsv = document.getElementById('rule-buy-soc-val');
+  if(sv)  sv.textContent  = sp.toLocaleString('cs-CZ') + ' W';
+  if(bv)  bv.textContent  = '+' + bsp.toLocaleString('cs-CZ') + ' W';
+  if(bsv) bsv.textContent = bsoc + '%';
+}
+
+function setRuleSP(v) {
+  const el = document.getElementById('rule-sell-setpoint');
+  if(el){ el.value=v; document.getElementById('rule-sell-setpoint-val').textContent=v.toLocaleString('cs-CZ')+' W'; saveRules(); updateRuleStatus(); }
+}
+function setRuleSOC(v) {
+  const el = document.getElementById('rule-buy-soc');
+  if(el){ el.value=v; document.getElementById('rule-buy-soc-val').textContent=v+'%'; saveRules(); }
+}
+
+function updateRuleStatus() {
+  if (!priceData) return;
+  const today = priceData.hoursToday || [];
+  if (!today.length) return;
+  let idx = curSlotIdx(today); if(idx<0) idx=today.length-1;
+  const spot = today[idx].priceCZK;
+  const recs = fveData?.records || [];
+  const hh = new Date().getHours();
+  const buyP = realBuyPrice(spot, hh);
+  const rules = loadRules();
+
+  const s1 = document.getElementById('rule1-status');
+  const s2 = document.getElementById('rule2-status');
+  const s3 = document.getElementById('rule3-status');
+  const s4 = document.getElementById('rule4-status');
+  const bh = document.getElementById('rule-buy-hint');
+
+  if(s1) { const active = spot > (rules.sellAbove??2500); s1.textContent = active ? '🔴 AKTIVNÍ — '+spot+' > '+(rules.sellAbove??2500) : '⚪ neaktivní — '+spot+' ≤ '+(rules.sellAbove??2500); s1.style.color = active?'var(--red)':'var(--muted)'; }
+  if(s2) { const active = spot < (rules.minSell??500); s2.textContent = active ? '🟠 BLOKOVÁNO — '+spot+' < '+(rules.minSell??500) : '⚪ neaktivní'; s2.style.color = active?'var(--orange)':'var(--muted)'; }
+  if(s3) { const active = buyP < (rules.buyBelow??3500) || spot <= 0; s3.textContent = active ? '🟢 AKTIVNÍ — '+buyP+' < '+(rules.buyBelow??3500)+' Kč' : '⚪ neaktivní — '+buyP+' ≥ '+(rules.buyBelow??3500); s3.style.color = active?'var(--accent)':'var(--muted)'; }
+  if(s4) { const active = spot < (rules.blockExport??1000); s4.textContent = active ? '🟣 BLOKOVÁNO — '+spot+' < '+(rules.blockExport??1000) : '⚪ povoleno'; s4.style.color = active?'var(--purple)':'var(--muted)'; }
+  if(bh) bh.textContent = 'aktuální reálná nákupní cena: ' + buyP + ' Kč/MWh s DPH';
+}
+
+// Override renderNodeRed to use rules
+function renderNodeRed() {
+  if (!priceData) return;
+  const today = priceData.hoursToday || [];
+  if (!today.length) return;
+  const now = new Date();
+  const hh = now.getHours();
+  let idx = curSlotIdx(today); if(idx<0) idx=today.length-1;
+  const cur = today[idx];
+  const spot = cur.priceCZK;
+  const buyP  = realBuyPrice(spot, hh);
+  const sellP = realSellPrice(spot);
+  const tariff = isVT(hh) ? 'VT' : 'NT';
+  const el = id => document.getElementById(id);
+
+  // Top cards
+  if(el('nr-spot'))      el('nr-spot').textContent = spot.toLocaleString('cs-CZ');
+  if(el('nr-buy-price')) el('nr-buy-price').textContent = buyP.toLocaleString('cs-CZ');
+  if(el('nr-buy-tariff'))el('nr-buy-tariff').textContent = tariff + ' · spot ' + spot + ' Kč/MWh';
+  if(el('nr-sell-price'))el('nr-sell-price').textContent = sellP.toLocaleString('cs-CZ');
+  if(el('nr-sell-spread')){
+    const spread = sellP - spot;
+    el('nr-sell-spread').textContent = 'srážka obchodníka: ' + Math.abs(spread) + ' Kč/MWh';
+    el('nr-sell-spread').style.color = 'var(--muted)';
+  }
+
+  // Arbitrage
+  const allBuy  = today.map(s => realBuyPrice(s.priceCZK, s.hour));
+  const allSell = today.map(s => realSellPrice(s.priceCZK));
+  const minBuy  = Math.min(...allBuy);
+  const maxSell = Math.max(...allSell);
+  const arb60   = Math.round((maxSell - minBuy) / 1000 * 60);
+  if(el('nr-arb'))       el('nr-arb').textContent = arb60 > 0 ? arb60.toLocaleString('cs-CZ') + ' Kč' : '—';
+  if(el('nr-arb-detail'))el('nr-arb-detail').textContent = 'nákup ' + minBuy + ' → prodej ' + maxSell + ' Kč/MWh';
+
+  // Best windows
+  const buySlots = [...today].map((s,i)=>({...s,realBuy:realBuyPrice(s.priceCZK,s.hour)})).sort((a,b)=>a.realBuy-b.realBuy).slice(0,5);
+  const sellSlots = [...today].map(s=>({...s,realSell:realSellPrice(s.priceCZK)})).sort((a,b)=>b.realSell-a.realSell).slice(0,5);
+  if(el('nr-best-buy'))  el('nr-best-buy').innerHTML  = buySlots.map(s=>`<div><span style="font-family:'Space Mono',monospace;color:var(--accent)">${slotLabel(s.hour,s.minute)}</span> — <b>${s.realBuy.toLocaleString('cs-CZ')}</b> Kč/MWh <span style="color:var(--muted);font-size:.65rem;">(spot ${s.priceCZK}${s.priceCZK<0?' 🤑':''})</span></div>`).join('');
+  if(el('nr-best-sell')) el('nr-best-sell').innerHTML = sellSlots.map(s=>`<div><span style="font-family:'Space Mono',monospace;color:var(--red)">${slotLabel(s.hour,s.minute)}</span> — <b>${s.realSell.toLocaleString('cs-CZ')}</b> Kč/MWh <span style="color:var(--muted);font-size:.65rem;">(spot ${s.priceCZK})</span></div>`).join('');
+
+  // Price breakdown (also update in Nastaveni)
+  const dist = isVT(hh) ? DIST_VT : DIST_NT;
+  const baseSum = spot + dist + DG_BUY + DAN + SYST + INFRA + POZE_KWH;
+  const rows = [
+    ['Spot cena', spot, 'var(--blue)'],
+    [`Distribuce (${tariff})`, dist, 'var(--text)'],
+    ['Delta Green', DG_BUY, 'var(--text)'],
+    ['Daň z elektřiny', DAN, 'var(--muted)'],
+    ['Syst. služby', SYST, 'var(--muted)'],
+    ['Infrastruktura', INFRA, 'var(--muted)'],
+    ['POZE', POZE_KWH, 'var(--muted)'],
+    ['Mezisoučet', Math.round(baseSum), 'var(--text)'],
+    ['DPH 21%', Math.round(baseSum * 0.21), 'var(--muted)'],
+    ['CELKEM', buyP, 'var(--red)'],
+  ];
+  const bdHtml = rows.map(([label,val,color])=>
+    `<div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--border)20;padding:4px 0;">
+      <span style="color:var(--muted);font-size:.78rem;">${label}</span>
+      <span style="color:${color};font-family:'Space Mono',monospace;font-size:.78rem;font-weight:${label==='CELKEM'?700:400}">${typeof val==='number'?val.toLocaleString('cs-CZ'):val} Kč/MWh</span>
+    </div>`).join('');
+  if(el('price-breakdown'))  el('price-breakdown').innerHTML = bdHtml;
+  if(el('ns-spot-val'))      el('ns-spot-val').textContent = spot.toLocaleString('cs-CZ');
+
+  // Rule status
+  applyRulesUI();
+  updateRuleStatus();
+  initApiUrl();
+}
+const NS_KEY = 'elektrina_nastaveni';
+
+// Distribuční sazby — ceny bez DPH v Kč/MWh
+// Zdroj: faktury + zpětný výpočet (VT = jednosložkové, nebo VT/NT kde je dvousložkové)
+const DIST_DB = {
+  cez: {
+    D01d: { vt: 3200, nt: null,  hint: 'Jednot. ČEZ' },
+    D02d: { vt: 2440, nt: 820,   hint: 'Standard dvout. ČEZ' },
+    D25d: { vt: 2743, nt: 249,   hint: 'Bojler 8h NT ČEZ' },
+    D26d: { vt: 1266, nt: 249,   hint: 'Akumulace 8h NT ČEZ' },
+    D27d: { vt: 2743, nt: 249,   hint: 'Elektromobilita ČEZ' },
+    D35d: { vt: 648,  nt: 648,   hint: 'Přímotop ČEZ' },
+    D45d: { vt: 648,  nt: 648,   hint: 'TČ vzduch ČEZ' },
+    D56d: { vt: 648,  nt: 249,   hint: 'TČ 22h NT ČEZ' },
+    D57d: { vt: 2248, nt: null,  hint: 'TČ/FVE 20h NT ČEZ — jednosložkové (ověřeno fakturou)' },
+    D61d: { vt: 3001, nt: 249,   hint: 'Víkend ČEZ' },
+  },
+  egd: {
+    D01d: { vt: 3100, nt: null,  hint: 'Jednot. EG.D' },
+    D02d: { vt: 2350, nt: 800,   hint: 'Standard EG.D' },
+    D25d: { vt: 2600, nt: 240,   hint: 'Bojler EG.D' },
+    D57d: { vt: 2100, nt: null,  hint: 'TČ/FVE EG.D' },
+  },
+  pre: {
+    D01d: { vt: 3300, nt: null,  hint: 'Jednot. PRE' },
+    D02d: { vt: 2500, nt: 850,   hint: 'Standard PRE' },
+    D25d: { vt: 2800, nt: 260,   hint: 'Bojler PRE' },
+    D57d: { vt: 2300, nt: null,  hint: 'TČ/FVE PRE' },
+  }
+};
+
+function onDistributorChange() {
+  onTariffChange();
+  saveNastaveni();
+}
+
+function onTariffChange() {
+  const dist = document.getElementById('ns-distributor')?.value ?? 'cez';
+  const tariff = document.getElementById('ns-tariff')?.value ?? 'D57d';
+  const db = DIST_DB[dist]?.[tariff];
+  if (!db) return;
+  document.getElementById('ns-dist-vt').value = db.vt;
+  document.getElementById('ns-dist-nt').value = db.nt ?? '';
+  document.getElementById('ns-dist-vt-hint').textContent = db.hint;
+  document.getElementById('ns-dist-nt-hint').textContent = db.nt ? `NT tarif platí mimo VT hodiny` : 'Jednosložková sazba — NT nevyplňuj';
+  saveNastaveni();
+}
+
+function toggleEvSection() {
+  const hasEv = document.getElementById('ns-has-ev')?.checked;
+  const evSec = document.getElementById('ns-ev-section');
+  if (evSec) evSec.style.display = hasEv ? 'block' : 'none';
+}
+
+function loadNastaveni() {
+  try {
+    const ns = JSON.parse(localStorage.getItem(NS_KEY) || '{}');
+    const set = (id, val) => { const el = document.getElementById(id); if (el && val !== undefined) { if (el.type === 'checkbox') el.checked = val; else el.value = val; } };
+    set('ns-distributor',   ns.distributor   ?? 'cez');
+    set('ns-tariff',        ns.tariff        ?? 'D57d');
+    set('ns-dist-vt',       ns.distVt        ?? 2248);
+    set('ns-dist-nt',       ns.distNt        ?? '');
+    set('ns-fuse',          ns.fuse          ?? '25');
+    set('ns-fuse-fee',      ns.fuseFee       ?? 605);
+    set('ns-trader-name',   ns.traderName    ?? 'Delta Green');
+    set('ns-trader-tariff', ns.traderTariff  ?? 'Spot s výkupem FVE');
+    set('ns-buy-markup',    ns.buyMarkup     ?? 350);
+    set('ns-sell-markup',   ns.sellMarkup    ?? 450);
+    set('ns-monthly-fee',   ns.monthlyFee    ?? 129);
+    set('ns-dph',           ns.dph           ?? 21);
+    set('ns-pv-kwp',        ns.pvKwp         ?? 15);
+    set('ns-bat-kwh',       ns.batKwh        ?? 60);
+    set('ns-min-soc',       ns.minSoc        ?? 0);
+    set('ns-max-setpoint',  ns.maxSetpoint   ?? 7000);
+    set('ns-vrm-id',        ns.vrmId         ?? '467894');
+    set('ns-inverter',      ns.inverter      ?? 'multiplus2');
+    set('ns-phases',        ns.phases        ?? '3');
+    set('ns-mppt-count',    ns.mpptCount     ?? '3');
+    set('ns-has-ev',        ns.hasEv         ?? true);
+    set('ns-has-tc',        ns.hasTc         ?? false);
+    set('ns-has-boiler',    ns.hasBoiler     ?? false);
+    set('ns-has-spot-sell', ns.hasSpotSell   ?? true);
+    set('ns-ev-brand',      ns.evBrand       ?? 'victron');
+    set('ns-ev-max-kw',     ns.evMaxKw       ?? 22);
+    set('ns-buy-below',     ns.buyBelow      ?? 3500);
+    set('ns-sell-above',    ns.sellAbove     ?? 2500);
+    toggleEvSection();
+  } catch(e) { console.warn('Nastavení load error:', e); }
+}
+
+function saveNastaveni() {
+  const get  = id => document.getElementById(id)?.value;
+  const getB = id => document.getElementById(id)?.checked ?? false;
+  const ns = {
+    distributor: get('ns-distributor'),  tariff: get('ns-tariff'),
+    distVt: parseFloat(get('ns-dist-vt')||2248),
+    distNt: get('ns-dist-nt') ? parseFloat(get('ns-dist-nt')) : null,
+    fuse: get('ns-fuse'), fuseFee: parseFloat(get('ns-fuse-fee')||605),
+    traderName: get('ns-trader-name'), traderTariff: get('ns-trader-tariff'),
+    buyMarkup: parseFloat(get('ns-buy-markup')||350),
+    sellMarkup: parseFloat(get('ns-sell-markup')||450),
+    monthlyFee: parseFloat(get('ns-monthly-fee')||129),
+    dph: parseFloat(get('ns-dph')||21),
+    pvKwp: parseFloat(get('ns-pv-kwp')||15),
+    batKwh: parseFloat(get('ns-bat-kwh')||60),
+    minSoc: parseFloat(get('ns-min-soc')||0),
+    maxSetpoint: parseFloat(get('ns-max-setpoint')||7000),
+    vrmId: get('ns-vrm-id'), inverter: get('ns-inverter'),
+    phases: get('ns-phases'), mpptCount: get('ns-mppt-count'),
+    hasEv: getB('ns-has-ev'), hasTc: getB('ns-has-tc'),
+    hasBoiler: getB('ns-has-boiler'), hasSpotSell: getB('ns-has-spot-sell'),
+    evBrand: get('ns-ev-brand'), evMaxKw: parseFloat(get('ns-ev-max-kw')||22),
+    buyBelow: parseFloat(get('ns-buy-below')||3500),
+    sellAbove: parseFloat(get('ns-sell-above')||2500),
+  };
+  localStorage.setItem(NS_KEY, JSON.stringify(ns));
+  return ns;
+}
+
+function saveNastaveniAll() {
+  saveNastaveni();
+  const el = document.getElementById('ns-save-status');
+  el.textContent = '✅ Uloženo — ' + new Date().toLocaleTimeString('cs-CZ');
+  el.style.color = 'var(--green)';
+  setTimeout(() => el.textContent = '', 3000);
+}
+
+function resetNastaveni() {
+  if (confirm('Obnovit výchozí nastavení?')) {
+    localStorage.removeItem(NS_KEY);
+    loadNastaveni();
+    onTariffChange();
+  }
+}
+
+function getNastaveni() {
+  try { return JSON.parse(localStorage.getItem(NS_KEY) || '{}'); } catch { return {}; }
+}
+const OV_KEY = 'elektrina_override';
+
+function loadOverride() {
+  try {
+    const ov = JSON.parse(localStorage.getItem(OV_KEY) || 'null');
+    if (!ov) return null;
+    // Zkontroluj platnost
+    if (ov.expires && Date.now() > ov.expires) {
+      localStorage.removeItem(OV_KEY);
+      return null;
+    }
+    return ov;
+  } catch { return null; }
+}
+
+function initOverrideUI() {
+  const ov = loadOverride();
+  const active = ov !== null;
+  setOverrideToggle(active);
+  if (active) {
+    document.getElementById('ov-setpoint').value = ov.grid_setpoint ?? 0;
+    document.getElementById('ov-soc').value = ov.setup_SOC ?? 10;
+    setBlockExportUI(ov.block_export ?? false);
+    updateOverridePreview();
+    showOverrideStatus(ov);
+  }
+}
+
+function setOverrideToggle(active) {
+  const track = document.getElementById('override-track');
+  const thumb = document.getElementById('override-thumb');
+  const fields = document.getElementById('override-fields');
+  if (!track) return;
+  if (active) {
+    track.style.background = 'var(--accent)';
+    thumb.style.transform = 'translateX(20px)';
+    fields.style.opacity = '1';
+    fields.style.pointerEvents = 'auto';
+  } else {
+    track.style.background = 'var(--border)';
+    thumb.style.transform = 'translateX(0)';
+    fields.style.opacity = '0.4';
+    fields.style.pointerEvents = 'none';
+  }
+}
+
+function toggleMasterOverride() {
+  const ov = loadOverride();
+  if (ov) {
+    clearOverride();
+  } else {
+    // Aktivuj s aktuálními hodnotami slideru
+    saveOverride();
+  }
+}
+
+function updateOverridePreview() {
+  const sp  = parseInt(document.getElementById('ov-setpoint')?.value ?? 0);
+  const soc = parseInt(document.getElementById('ov-soc')?.value ?? 10);
+  document.getElementById('ov-setpoint-val').textContent = (sp >= 0 ? '+' : '') + sp + ' W';
+  document.getElementById('ov-setpoint-val').style.color = sp < 0 ? 'var(--red)' : sp > 0 ? 'var(--green)' : 'var(--muted)';
+  document.getElementById('ov-soc-val').textContent = soc + ' %';
+  document.getElementById('ov-soc-val').style.color = soc >= 80 ? 'var(--green)' : soc <= 20 ? 'var(--red)' : 'var(--purple)';
+}
+
+let _blockExport = false;
+function toggleBlockExport() {
+  _blockExport = !_blockExport;
+  setBlockExportUI(_blockExport);
+}
+function setBlockExportUI(val) {
+  _blockExport = val;
+  const track = document.getElementById('ov-export-track');
+  const thumb = document.getElementById('ov-export-thumb');
+  const label = document.getElementById('ov-export-label');
+  if (!track) return;
+  if (val) {
+    track.style.background = 'var(--orange)';
+    thumb.style.transform = 'translateX(20px)';
+    label.textContent = 'true';
+    label.style.color = 'var(--orange)';
+  } else {
+    track.style.background = 'var(--border)';
+    thumb.style.transform = 'translateX(0)';
+    label.textContent = 'false';
+    label.style.color = 'var(--green)';
+  }
+}
+
+function setOvSetpoint(v) {
+  document.getElementById('ov-setpoint').value = v;
+  updateOverridePreview();
+}
+function setOvSOC(v) {
+  document.getElementById('ov-soc').value = v;
+  updateOverridePreview();
+}
+
+function saveOverride() {
+  const sp       = parseInt(document.getElementById('ov-setpoint').value ?? 0);
+  const soc      = parseInt(document.getElementById('ov-soc').value ?? 10);
+  const duration = parseInt(document.getElementById('ov-duration').value ?? 0);
+  const expires  = duration > 0 ? Date.now() + duration * 60 * 1000 : null;
+
+  const ov = {
+    active:        true,
+    grid_setpoint: sp,
+    block_export:  _blockExport,
+    setup_SOC:     soc,
+    saved_at:      new Date().toISOString(),
+    expires
+  };
+  localStorage.setItem(OV_KEY, JSON.stringify(ov));
+  setOverrideToggle(true);
+  showOverrideStatus(ov);
+
+  // Okamžitě refresh test endpointu pokud je otevřený
+  const preview = document.getElementById('api-preview');
+  if (preview.style.display !== 'none') testApiEndpoint();
+}
+
+function clearOverride() {
+  localStorage.removeItem(OV_KEY);
+  setOverrideToggle(false);
+  document.getElementById('ov-status').textContent = '↺ Obnoveno automatické řízení';
+  document.getElementById('ov-status').style.color = 'var(--muted)';
+}
+
+function showOverrideStatus(ov) {
+  const el = document.getElementById('ov-status');
+  const exp = ov.expires ? ` · platí do ${new Date(ov.expires).toLocaleTimeString('cs-CZ')}` : ' · platí dokud nezrušíš';
+  el.innerHTML = `✅ Aktivní: setpoint <b>${ov.grid_setpoint >= 0 ? '+' : ''}${ov.grid_setpoint} W</b>, SOC <b>${ov.setup_SOC}%</b>, block_export <b>${ov.block_export}</b>${exp}`;
+  el.style.color = 'var(--green)';
+}
+function getApiUrl() {
+  const base = `${window.location.origin}/.netlify/functions/data`;
+  const r = loadRules();
+  const params = new URLSearchParams({
+    sell_above:    r.sellAbove    ?? 2500,
+    sell_setpoint: r.sellSetpoint ?? -5000,
+    min_sell:      r.minSell      ?? 500,
+    buy_below:     r.buyBelow     ?? 3500,
+    buy_soc:       r.buySOC       ?? 100,
+    buy_setpoint:  r.buySetpoint  ?? 5000,
+    block_export:  r.blockExport  ?? 1000,
+  });
+  return `${base}?${params.toString()}`;
+}
+
+function initApiUrl() {
+  const el = document.getElementById('api-url');
+  if (!el) return;
+  el.textContent = getApiUrl();
+  initOverrideUI();
+}
+
+function copyApiUrl() {
+  navigator.clipboard.writeText(getApiUrl()).then(() => {
+    const btn = event.target;
+    const orig = btn.textContent;
+    btn.textContent = '✅ Zkopírováno!';
+    btn.style.color = 'var(--green)';
+    setTimeout(() => { btn.textContent = orig; btn.style.color = ''; }, 2000);
+  });
+}
+
+async function testApiEndpoint() {
+  const preview = document.getElementById('api-preview');
+  const jsonEl  = document.getElementById('api-json');
+  preview.style.display = 'block';
+  jsonEl.textContent = 'Načítám...';
+  jsonEl.style.color  = 'var(--muted)';
+  try {
+    const r    = await fetch(getApiUrl());
+    const data = await r.json();
+    const json = JSON.stringify(data, null, 2);
+    jsonEl.innerHTML = json
+      .replace(/"([^"]+)":/g,      '<span style="color:#b388ff">"$1"</span>:')
+      .replace(/: (-?\d+\.?\d*)/g, ': <span style="color:#ffd600">$1</span>')
+      .replace(/: (true|false)/g,  ': <span style="color:#00e676">$1</span>')
+      .replace(/: "([^"]+)"/g,     ': <span style="color:#00d4ff">"$1"</span>');
+    jsonEl.style.color = 'var(--text)';
+    document.getElementById('api-url').textContent = getApiUrl();
+  } catch(e) {
+    jsonEl.textContent = 'Chyba: ' + e.message;
+    jsonEl.style.color = 'var(--red)';
+  }
+}
+
+// ── GRID SETPOINT ─────────────────────────────────────────────
+async function setGridSetpoint(watts) {
+  const el = document.getElementById('setpointStatus');
+  el.textContent = `Nastavuji ${watts > 0 ? '+' : ''}${watts} W...`;
+  el.style.color = 'var(--accent)';
+  try {
+    // Victron Grid setpoint via VRM API - instance 0 is typical for Multiplus II
+    const body = { keepAlive: 60, attributes: { '/Settings/CGwacs/AcPowerSetPoint': watts } };
+    const r = await fetch(`/.netlify/functions/vrm?path=${encodeURIComponent(`/installations/${VRM_SITE}/settings`)}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    const data = await r.json();
+    if (data.success) {
+      el.textContent = `✅ Grid setpoint nastaven na ${watts > 0 ? '+' : ''}${watts} W`;
+      el.style.color = 'var(--green)';
+    } else {
+      throw new Error(data.error_message || 'Chyba');
+    }
+  } catch(e) {
+    el.textContent = `⚠️ Setpoint nelze nastavit přes API (${e.message}) — nastav ručně ve Victron VRM`;
+    el.style.color = 'var(--orange)';
+  }
+}
+
+// ── ANIMOVANÝ TOK ENERGIE ─────────────────────────────────────
+let flowState = { solarW:0, gridW:0, loadW:0, batW:0, evW:0 };
+
+function updateFlowDiagram(solarW, gridW, loadW, batW, evW) {
+  flowState = { solarW, gridW, loadW, batW, evW };
+  const s = id => document.getElementById(id);
+  if (!s('fn-solar-val')) return;
+
+  s('fn-solar-val').textContent = fmtW(solarW);
+  s('fn-grid-val').textContent  = fmtW(Math.abs(gridW));
+  s('fn-grid-dir').textContent  = gridW < -50 ? '→ Do sítě' : gridW > 50 ? '← Ze sítě' : 'Vyrovnáno';
+  s('fn-grid-val').setAttribute('fill', gridW < -50 ? '#00e676' : gridW > 50 ? '#ff1744' : '#00d4ff');
+  s('fn-load-val').textContent  = fmtW(loadW);
+  s('fn-ev-val').textContent    = fmtW(evW);
+
+  const recs = fveData?.records || [];
+  const soc  = recs.find(r=>r.code==='bs')?.rawValue ?? recs.find(r=>r.code==='SOC')?.rawValue;
+  if (soc != null) {
+    s('fn-bat-soc').textContent = Math.round(soc) + '%';
+    s('fn-bat-soc').setAttribute('fill', soc>60?'#00e676':soc>30?'#ffd600':'#ff1744');
+  }
+  s('fn-bat-pwr').textContent = fmtW(Math.abs(batW)) + (batW>50?' ↑':batW<-50?' ↓':'');
+
+  // Barvy linek
+  const lc = (w, col) => Math.abs(w) > 30 ? col : '#1e2d45';
+  const sl = (id, w, col) => { const l=s(id); if(l) l.setAttribute('stroke', lc(w,col)); };
+  sl('fl-solar', solarW,   '#ffd600');
+  sl('fl-grid',  gridW,    gridW < 0 ? '#00e676' : '#ff1744');
+  sl('fl-load',  loadW,    '#00e676');
+  sl('fl-bat',   batW,     '#b388ff');
+  sl('fl-ev',    evW,      '#00d4ff');
+
+  renderFlowDots();
+}
+
+function renderFlowDots() {
+  const container = document.getElementById('flowDots');
+  if (!container) return;
+  container.innerHTML = '';
+
+  const { solarW, gridW, loadW, batW, evW } = flowState;
+  const flows = [
+    { x1:100,y1:80,  x2:280,y2:155, w:solarW,              color:'#ffd600', active:solarW>50 },
+    { x1:460,y1:80,  x2:280,y2:155, w:Math.abs(gridW),      color:gridW>50?'#ff1744':'#00e676', active:Math.abs(gridW)>50, rev:gridW<0 },
+    { x1:280,y1:175, x2:460,y2:265, w:Math.max(0,loadW-evW),color:'#00e676', active:loadW>50 },
+    { x1:280,y1:175, x2:100,y2:257, w:Math.abs(batW),       color:'#b388ff', active:Math.abs(batW)>50, rev:batW<0 },
+    { x1:460,y1:265, x2:460,y2:275, w:evW,                  color:'#00d4ff', active:evW>100 },
+  ];
+
+  const NS = 'http://www.w3.org/2000/svg';
+  flows.forEach(fl => {
+    if (!fl.active) return;
+    const dur = Math.max(0.6, Math.min(2.5, 3000 / fl.w));
+    const n   = Math.max(1, Math.min(4, Math.round(fl.w / 2000)));
+    for (let i = 0; i < n; i++) {
+      const dot = document.createElementNS(NS, 'circle');
+      dot.setAttribute('r', '5');
+      dot.setAttribute('fill', fl.color);
+      dot.setAttribute('opacity', '0');
+
+      const x1 = fl.rev ? fl.x2 : fl.x1, y1 = fl.rev ? fl.y2 : fl.y1;
+      const x2 = fl.rev ? fl.x1 : fl.x2, y2 = fl.rev ? fl.y1 : fl.y2;
+      const delay = (i / n) * dur;
+
+      const am = document.createElementNS(NS, 'animateMotion');
+      am.setAttribute('dur', dur + 's');
+      am.setAttribute('repeatCount', 'indefinite');
+      am.setAttribute('begin', delay + 's');
+      am.setAttribute('path', `M${x1},${y1} L${x2},${y2}`);
+      dot.appendChild(am);
+
+      const ao = document.createElementNS(NS, 'animate');
+      ao.setAttribute('attributeName', 'opacity');
+      ao.setAttribute('dur', dur + 's');
+      ao.setAttribute('repeatCount', 'indefinite');
+      ao.setAttribute('begin', delay + 's');
+      ao.setAttribute('values', '0;1;1;0');
+      ao.setAttribute('keyTimes', '0;0.1;0.9;1');
+      dot.appendChild(ao);
+
+      container.appendChild(dot);
+    }
+  });
+}
+
+// ── COUNTDOWN ────────────────────────────────────────────────
+const REFRESH_SEC = 30;
+let _countdown = REFRESH_SEC;
+let _countdownTimer = null;
+
+function startCountdown() {
+  _countdown = REFRESH_SEC;
+  clearInterval(_countdownTimer);
+  _countdownTimer = setInterval(() => {
+    _countdown--;
+    const num   = document.getElementById('countdownNum');
+    const circ  = document.getElementById('countdownCircle');
+    const label = document.getElementById('countdownLabel');
+    if (num)   { num.textContent = _countdown; num.style.color = _countdown <= 5 ? 'var(--orange)' : 'var(--accent)'; }
+    if (circ)  circ.setAttribute('stroke-dashoffset', 56.5 * (1 - _countdown / REFRESH_SEC));
+    if (label) label.textContent = _countdown + 's';
+    if (_countdown <= 0) { _countdown = REFRESH_SEC; refreshAll(); }
+  }, 1000);
+}
+
+// ── START ─────────────────────────────────────────────────────
+refreshAll();
+applyConfig();
+initApiUrl();
+loadNastaveni();
+startCountdown();
+
+// ── SIDEBAR ───────────────────────────────────────────────────
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').style.display =
+    document.getElementById('sidebar').classList.contains('open') ? 'block' : 'none';
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').style.display = 'none';
+}
+
+// ── NAVIGATION ────────────────────────────────────────────────
+function navTo(id, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const page = document.getElementById('page-' + id);
+  if (page) page.classList.add('active');
+  if (el) el.classList.add('active');
+  closeSidebar();
+  // Trigger renders
+  if (id === 'ceny' && priceData) setTimeout(() => renderPriceChart(priceChartMode), 50);
+  if (id === 'strategie') setTimeout(() => renderStrategy(), 50);
+  if (id === 'nodered') setTimeout(() => renderNodeRed(), 50);
+  if (id === 'nastaveni') setTimeout(() => { loadNastaveni(); onTariffChange(); }, 50);
+  if (id === 'prehled') setTimeout(() => renderOverview(), 50);
+}
+
+// Override old switchTab
+function switchTab(id, btn) { navTo(id, btn); }
+
+// ── OVERVIEW ─────────────────────────────────────────────────
+function renderOverview() {
+  if (!priceData) return;
+  const today = priceData.hoursToday || [];
+  if (!today.length) return;
+
+  let idx = curSlotIdx(today); if(idx<0) idx=today.length-1;
+  const cur = today[idx];
+  const lc = levelClass(cur.level);
+
+  // Hero price
+  const el = id => document.getElementById(id);
+  el('ov-price').textContent = cur.priceCZK + ' Kč';
+  el('ov-price').style.color = cur.priceCZK < 0 ? 'var(--accent)' : cur.priceCZK > 2500 ? 'var(--red)' : cur.priceCZK < 1000 ? 'var(--accent)' : 'var(--blue)';
+  el('ov-price-sub').textContent = cur.priceEur.toFixed(2) + ' EUR/MWh · ' + slotLabel(cur.hour, cur.minute);
+  const lvlEl = el('ov-level');
+  lvlEl.textContent = levelLabel(cur.level);
+  lvlEl.className = 'badge badge-' + lc;
+
+  // Decision
+  const cfg = { buyBelow: parseFloat(el('cfg-buy')?.value??1000), sellAbove: parseFloat(el('cfg-sell')?.value??2500), minSOC:0, batKwh:60 };
+  const recs = fveData?.records || [];
+  const soc = recs.find(r=>r.code==='bs')?.rawValue ?? recs.find(r=>r.code==='SOC')?.rawValue ?? 80;
+  const solarW = recs.filter(r=>r.code==='PVP').reduce((s,r)=>s+(r.rawValue||0),0) || recs.find(r=>r.code==='Pdc')?.rawValue || 0;
+  const dec = decideSlot(cur.priceCZK, soc, solarW, cfg);
+  el('ov-decision').textContent = dec.icon + ' ' + dec.mode;
+  el('ov-decision').style.color = dec.color;
+  el('ov-action').textContent = cur.priceCZK >= cfg.sellAbove ? '→ Nastav Grid setpoint: -7000 W' :
+    cur.priceCZK < cfg.buyBelow ? '→ Nastav Grid setpoint: +5000 W' : '→ Grid setpoint: 0 W (standby)';
+
+  // FVE cards
+  if (fveData) {
+    el('ov-solar').textContent = fmtW(solarW);
+    el('ov-solar-today').textContent = 'Dnes: —';
+    const batPwr = recs.find(r=>r.code==='bp')?.rawValue ?? 0;
+    el('ov-soc').textContent = Math.round(soc) + '%';
+    el('ov-bat-pwr').textContent = fmtW(Math.abs(batPwr)) + (batPwr>50?' ↑ nabíjení':batPwr<-50?' ↓ vybíjení':'');
+    const bar = el('ov-bat-bar');
+    if(bar){ bar.style.width=soc+'%'; bar.style.background=soc>60?'var(--accent)':soc>30?'var(--yellow)':'var(--red)'; }
+    const evW = recs.find(r=>r.code==='evp')?.rawValue ?? 0;
+    const evState = recs.find(r=>r.code==='eve')?.formattedValue ?? '—';
+    el('ov-ev').textContent = fmtW(evW);
+    el('ov-ev-status').textContent = evState;
+    const g1=recs.find(r=>r.code==='g1')?.rawValue??0, g2=recs.find(r=>r.code==='g2')?.rawValue??0, g3=recs.find(r=>r.code==='g3')?.rawValue??0;
+    const gridW = g1+g2+g3;
+    el('ov-grid').textContent = fmtW(Math.abs(gridW));
+    el('ov-grid').style.color = gridW<-50?'var(--accent)':gridW>50?'var(--red)':'var(--blue)';
+    el('ov-grid-dir').textContent = gridW<-50?'→ Do sítě':gridW>50?'← Ze sítě':'Vyrovnáno';
+  }
+
+  // Sidebar mini status
+  const sb = id => document.getElementById(id);
+  sb('sb-solar').textContent = fmtW(solarW);
+  sb('sb-soc').textContent = Math.round(soc) + '%';
+  sb('sb-price').textContent = cur.priceCZK + ' Kč';
+  const sbBar = sb('sb-bat-bar');
+  if(sbBar){ sbBar.style.width=soc+'%'; sbBar.style.background=soc>60?'var(--accent)':soc>30?'var(--yellow)':'var(--red)'; }
+
+  // Arbitrage
+  const allPrices = today.map(s=>s.priceCZK);
+  const minP = Math.min(...allPrices), maxP = Math.max(...allPrices);
+  const arb = Math.round((maxP-minP)/1000*60);
+  el('ov-arb').textContent = arb > 0 ? arb.toLocaleString('cs-CZ') + ' Kč' : '—';
+  el('ov-arb-detail').textContent = `${minP} → ${maxP} Kč/MWh`;
+}
+
+// Hook into refreshAll to also update overview and sidebar
+// ── LAST UPDATE ───────────────────────────────────────────────
+function updateStatus(ok) {
+  const dot = document.getElementById('liveDot');
+  const txt = document.getElementById('liveStatus');
+  const lu  = document.getElementById('lastUpdate');
+  if(dot) dot.style.background = ok ? 'var(--accent)' : 'var(--red)';
+  if(txt) txt.textContent = ok ? 'Živá data · ' + new Date().toLocaleTimeString('cs-CZ') : 'Chyba načtení';
+  if(lu)  lu.textContent = ok ? new Date().toLocaleTimeString('cs-CZ') : '—';
+  // Always update overview sidebar after any data load
+  setTimeout(renderOverview, 50);
+}
+
+
+// ── START ─────────────────────────────────────────────────────
+refreshAll();
+applyConfig();
+initApiUrl();
+loadNastaveni();
+applyRulesUI();
+startCountdown();
+</script>
+</body>
+</html>
